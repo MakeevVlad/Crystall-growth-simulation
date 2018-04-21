@@ -16,9 +16,9 @@ private:
 	size_t size[3];
 
 public:
-	 
 
-	//Конструкторы 
+
+	//Конструкторы
 	Field();
 	Field(size_t len, size_t wid, size_t hei);
 
@@ -47,12 +47,16 @@ public:
 	double x, y, z;
 	const double mass;
 	const double charge;
-	//double velocity[2];
+	double dir[2];
+	double energy;
+
+	double delta_en = 100;
 	
+	Molecule();
+
 	void En_loss();
 };
 
 //Movements
 
 //Direction choice
-

@@ -1,26 +1,32 @@
 #include <vector>
 #include <iostream>
+#include <algorithm>
+
 #include "Functions.h"
 
-void coord(size_t x, size_t y)
-{
-	x = rand() % 100 + 1;
-	y = rand() % 100 + 1;
-}
+
 
 size_t direction(Molecule mol, Field field)
 {
+	size_t i =0;
+	std::vector<std::vector<double&>> pot;
 	for (size_t x = mol.x - 1; x <= mol.x + 1; ++x)
 		for (size_t y = mol.y -1; y <= mol.y + 1; ++y)
 			for (size_t z = mol.z; z <= mol.z + 1; ++z )
 		{
 			if (x == mol.x && y == mol.y && z == mol.z) continue;
-			if (field[x][y][z][0] == 1) continue; //В простейшем случае свободная частица не может выбить уже закреплённую
-
-			//Поиск минимальной энергии взаимодействия 
-			double pot = 0;
-			
+		 	if (field[x][y][z][0] == 1) continue; //В простейшем случае свободная частица не может выбить уже закреплённую
+			//Поиск минимальной энергии взаимодейст
+			pot[i] = field[x][y][z][1];
 		}
+
+	std::sort(pot.rbegin(), pot.rend());
+
+	r = (rand() % 100) / 100;
+	for (i = 0; i<=pot.size(); ++i)
+	{
+		
+	}
 }
 
 
@@ -40,11 +46,11 @@ void Field::set_size(size_t len, size_t wid, size_t hei)
 	size[2] = hei; //z_size
 }
 
-size_t& Field::get_size_x() 
+size_t& Field::get_size_x()
 { return size[0]; }
-size_t& Field::get_size_y() 
+size_t& Field::get_size_y()
 { return size[1]; }
-size_t& Field::get_size_z() 
+size_t& Field::get_size_z()
 { return size[2]; }
 
 std::vector<std::vector<std::vector<double>>>& Field::operator[](size_t i)
@@ -54,3 +60,14 @@ std::vector<std::vector<std::vector<double>>>& Field::operator[](size_t i)
 
 //*****Функции класса Molecule***********************************************************
 
+Molecule::Molecule(Field field)
+{
+	x = rand() % field.size[0];
+	y = rand() % field.size[1];
+	z = 0;
+}
+
+void Molecule::En_loss()
+{
+	energy -= delta_en;
+}
