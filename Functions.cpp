@@ -14,18 +14,28 @@ size_t direction(Molecule mol, Field field)
 		for (size_t y = mol.y -1; y <= mol.y + 1; ++y)
 			for (size_t z = mol.z; z <= mol.z + 1; ++z )
 		{
-			if (x == mol.x && y == mol.y && z == mol.z) continue;
 		 	if (field[x][y][z][0] == 1) continue; //В простейшем случае свободная частица не может выбить уже закреплённую
-			//Поиск минимальной энергии взаимодейст
-			pot[i] = field[x][y][z][1];
-		}
 
+			pot[i][0] = field[x][y][z][1];
+			pot[i][1] = x;
+			pot[i][2] = y;
+			pot[i][3] = z;
+		}
+	//Сортировка (Допустим, что после неё вектор будет отсортирован по мервым элементам)
 	std::sort(pot.rbegin(), pot.rend());
 
+
+	//Выбор направления
 	r = (rand() % 100) / 100;
+
+	//Массив с вероятностями
+	double p[pot.size()];
+	double c = 0;
+	for (i = 0; i <= pot.size(); ++i) c += pot[i];
+
 	for (i = 0; i<=pot.size(); ++i)
 	{
-		
+		p[i] = pot[i] / c;
 	}
 }
 
