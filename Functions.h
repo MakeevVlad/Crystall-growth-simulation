@@ -43,6 +43,7 @@ class Molecule
 private:
 
 
+
 public:
 	double x, y, z;
 	const double mass;
@@ -51,7 +52,7 @@ public:
 	double energy;
 
 	double delta_en = 100;
-	
+
 	Molecule();
 
 	void En_loss();
