@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 
 #include "Functions.h"
 
@@ -16,20 +17,24 @@ void v_zero_sort( std::vector<std::vector<double&>>& pot)
 
 //*****Фунции движения********************************************************************
 
-//Эта функция задает точку присоединения, если энергия взаимодействия достаточна
+//Эта функция задает точку присоединения, если энергия частицы достаточно мала
 size_t direction(Molecule mol, Field field)
 {
 
 	std::vector<std::vector<double&>> pot;
 
-	//Sluchay, kogda chastitsa peremeshaetsa strogo po Oy
+	//Случай, когда частица перемещается строго по  Oy
 	if (mol.dir[0] == 0)
 	{
 		//To, kuda budet dvigatsa chasstitsa
 		if (mol.dir[1] ==  1) size_t y = y.mol + 1;
 		if (mol.dir[1] == -1) size_t y = y.mol - 1;
 
-		(pot[0][0], pot[0][1], pot[2], pot[0][3]) = (field[mol.x][mol.y][mol.z][1], mol.x, mol.y, mol.z);
+		pot[0][0] = field[mol.x][mol.y][mol.z][1];
+		pot[0][1] = mol.x;
+		pot[0][2] = mol.y;
+		pot[0][3] = mol.z;
+
 
 		for (size_t x = mol.x - 1; x <= mol.x + 1; ++x)
 			for (size_t z = mol.z - 1, size_t i = 1; z <= mol.z + 1; ++z, ++i )
@@ -39,13 +44,16 @@ size_t direction(Molecule mol, Field field)
 			}
 	}
 
-	//Sluchay, kogda chastitsa peremeshaetsa srtogo po Ox
+	//Случай, когда частица перемещается строго по Ox
 	if (mol.dir[0] != 0 && mol.dir[1] != 1)
 	{
 		if (mol.dir[1] ==  1) size_t x = x.mol + 1;
 		if (mol.dir[1] == -1) size_t x = x.mol - 1;
 
-		(pot[0][0], pot[0][1], pot[2], pot[0][3]) = (field[mol.x][mol.y][mol.z][1], mol.x, mol.y, mol.z);
+		pot[0][0] = field[mol.x][mol.y][mol.z][1];
+		pot[0][1] = mol.x;
+		pot[0][2] = mol.y;
+		pot[0][3] = mol.z;
 
 		for (size_t y = mol.x; y <= mol.y + 1; ++y)
 			for (size_t z = mol.z - 1, size_t i = 1; z <= mol.z + 1; ++z, ++i )
@@ -55,7 +63,7 @@ size_t direction(Molecule mol, Field field)
 			}
 	}
 
-	//Sluchay, kogda chastitsa dvigaetsa po diagonali
+	//Случай, когда частица двигается по диагонали
 	else
 	{
 		return 0;
@@ -93,7 +101,7 @@ size_t direction(Molecule mol, Field field)
 
 }
 
-//Eta funkciya otvechaet za peremeshenie chasticy
+//Эта функция отвечает за перемещение частицы
 size_t movement(Molecule mol, Field field)
 {
 	//Energiya, obladaya kotoroy chastitsa uzhe ne mozhet svobodno dvigatsa
@@ -103,9 +111,22 @@ size_t movement(Molecule mol, Field field)
 	{
 		direction(mol, field);
 	}
-
-
-
+	//Случаи, когда частица двигается вдоль осей:
+	//Ox
+	if (abs(mol.dir[0]) != 1 && abs(mol.dir[1]) != 1)
+	{	
+		if (field[mol.dir[0] == 1?(mol.x + 1):(mol.x -1)][mol.dir[1] == 1 ? (mol.y + 1) : (mol.y - 1)][mol.z][0] == 0) //Если последующая ячейка свободна
+		{
+			//Случай, когда переход переходит строго вперёд
+			if (field[mol.dir[0] == 1 ? (mol.x + 1) : (mol.x - 1)][mol.dir[1] == 1 ? (mol.y + 1) : (mol.y - 1)][mol.z - 1][0])
+			{
+				mol.En_loss();
+				mol.dir[0] == 1 ? ++mol.x : --mol.x;
+				return 1;
+			}
+		//Здесь нужно добавить случай, когда есть возможность перехода на уровень вниз
+		}
+	}
 }
 
 //*****Функции класса Field***************************************************************
