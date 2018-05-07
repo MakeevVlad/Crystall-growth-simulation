@@ -10,13 +10,13 @@ class Field
 {
 
 private:
-	//Само 3d поле
-	tdim_vec zone[2]; //Zone[0] -- занята ли ячейка; zone[1] -- потенциал
-	//Ограничения поля по размеру
-	size_t size[3];
+
 
 public:
-
+	//Само 3d поле
+	std::vector<std::vector<std::vector<std::vector<double>>>> zone; //Zone[0] -- занята ли ячейка; zone[1] -- потенциал
+					  //Ограничения поля по размеру
+	size_t size[3];
 
 	//Конструкторы
 	Field();
@@ -35,7 +35,9 @@ public:
 
 	//Взятие индекса
 	std::vector<std::vector<std::vector<double>>>& operator[](size_t i);
+	//const std::vector<double>& operator[][][][](size_t i, size_t j, size_t k, size_t p) const;
 
+	//const std::vector<double>& operator[](size_t i);
 };
 
 class Molecule
@@ -45,19 +47,19 @@ private:
 
 
 public:
-	double x, y, z;
-	const double mass;
-	const double charge;
-	double dir[2];
+	size_t x, y, z;
+	double mass = 0;
+	double charge = 0;
+	int dir[2];
 	double energy;
 
 	double delta_en = 100;
 
 	Molecule(Field field);
-
+	Molecule(size_t x, size_t y, size_t z);
 	void En_loss();
 };
 
 //Movements
 
-//Direction choice
+//Direction choiceл
