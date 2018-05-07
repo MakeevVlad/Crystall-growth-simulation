@@ -53,7 +53,7 @@ public:
 
 	double delta_en = 100;
 
-	Molecule();
+	Molecule(Field field);
 
 	void En_loss();
 };

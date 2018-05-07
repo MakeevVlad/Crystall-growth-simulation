@@ -5,7 +5,7 @@
 
 #include "Functions.h"
 
-//*****
+
 void v_zero_sort( std::vector<std::vector<double&>>& pot)
 {
 
@@ -114,7 +114,7 @@ size_t movement(Molecule mol, Field field)
 	//Случаи, когда частица двигается вдоль осей:
 	//Ox
 	if (abs(mol.dir[0]) != 1 && abs(mol.dir[1]) != 1)
-	{	
+	{
 		if (field[mol.dir[0] == 1?(mol.x + 1):(mol.x -1)][mol.dir[1] == 1 ? (mol.y + 1) : (mol.y - 1)][mol.z][0] == 0) //Если последующая ячейка свободна
 		{
 			//Случай, когда переход переходит строго вперёд
