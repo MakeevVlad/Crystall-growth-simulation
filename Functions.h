@@ -1,39 +1,36 @@
-#pragma once
+п»ї#pragma once
 
 #include <vector>
 #include <iostream>
-#include "Functions.h"
 
 typedef std::vector<std::vector<std::vector<double>>> tdim_vec;
+
 
 class Field
 {
 
-private:
-
-
 public:
-	//Само 3d поле
-	std::vector<std::vector<std::vector<std::vector<double>>>> zone; //Zone[0] -- занята ли ячейка; zone[1] -- потенциал
-					  //Ограничения поля по размеру
+	//РЎР°РјРѕ 3d РїРѕР»Рµ
+	std::vector<std::vector<std::vector<std::vector<double>>>> zone; //Zone[0] -- Р·Р°РЅСЏС‚Р° Р»Рё СЏС‡РµР№РєР°; zone[1] -- РїРѕС‚РµРЅС†РёР°Р»
+					  //РћРіСЂР°РЅРёС‡РµРЅРёСЏ РїРѕР»СЏ РїРѕ СЂР°Р·РјРµСЂСѓ
 	size_t size[3];
 
-	//Конструкторы
+	//РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂС‹
 	Field();
 	Field(size_t len, size_t wid, size_t hei);
 
-	//Задаёт макс. размер кристалла
+	//Р—Р°РґР°С‘С‚ РјР°РєСЃ. СЂР°Р·РјРµСЂ РєСЂРёСЃС‚Р°Р»Р»Р°
 	void set_size(size_t len, size_t wid, size_t hei);
 
-	//Узнать макс. размеры кристалла
+	//РЈР·РЅР°С‚СЊ РјР°РєСЃ. СЂР°Р·РјРµСЂС‹ РєСЂРёСЃС‚Р°Р»Р»Р°
 	size_t& get_size_x();
 	size_t& get_size_y();
 	size_t& get_size_z();
 
-	//Задаёт карту потенциала
+	//Р—Р°РґР°С‘С‚ РєР°СЂС‚Сѓ РїРѕС‚РµРЅС†РёР°Р»Р°
 	void potencial();
 
-	//Взятие индекса
+	//Р’Р·СЏС‚РёРµ РёРЅРґРµРєСЃР°
 	std::vector<std::vector<std::vector<double>>>& operator[](size_t i);
 	//const std::vector<double>& operator[][][][](size_t i, size_t j, size_t k, size_t p) const;
 
@@ -42,9 +39,6 @@ public:
 
 class Molecule
 {
-private:
-
-
 
 public:
 	size_t x, y, z;
@@ -62,4 +56,5 @@ public:
 
 //Movements
 
-//Direction choiceл
+//Direction choiceР»
+

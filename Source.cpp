@@ -1,7 +1,9 @@
-#include <vector>
+﻿#include <vector>
 #include <iostream>
 #include "Functions.h"
 
+void movement(Molecule& mol, Field& field);
+void direction(Molecule& mol, Field& field);
 
 int main()
 {
@@ -12,13 +14,16 @@ int main()
 	y = 10;
 	z = 0;
 
-	size_t ch;
+	double ch;
 
-	Field field(100, 100, 100);
+	Field field(10, 10, 10);
 	
 	ch = field.get_size_x();
 	Molecule mol(field);
-	//field.potencial();
+	//field.potencial() ;
 
+	movement(mol, field);
+	
 	return 0;
 }
+
