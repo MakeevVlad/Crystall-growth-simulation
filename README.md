@@ -1,2 +1,5 @@
-# Substance_simulation
-Simulates ideal substances
+#### Crystall growth simulation
+Represents model of ideal crystall's growth
+
+
+Model description
