@@ -6,13 +6,14 @@
 typedef std::vector<std::vector<std::vector<double>>> tdim_vec;
 
 
+
 class Field
 {
 
 public:
 	//Само 3d поле
 	std::vector<std::vector<std::vector<std::vector<double>>>> zone; //Zone[0] -- занята ли ячейка; zone[1] -- потенциал
-					  //Ограничения поля по размеру
+	 //Ограничения поля по размеру
 	size_t size[3];
 
 	//Конструкторы
@@ -56,5 +57,6 @@ public:
 
 //Movements
 
-//Direction choiceл
+//Direction choice
+
 
