@@ -33,9 +33,8 @@ public:
 
 	//Взятие индекса
 	std::vector<std::vector<std::vector<double>>>& operator[](size_t i);
-	//const std::vector<double>& operator[][][][](size_t i, size_t j, size_t k, size_t p) const;
+	const std::vector<double>& operator[](size_t i) const;
 
-	//const std::vector<double>& operator[](size_t i);
 };
 
 class Molecule
@@ -45,13 +44,14 @@ public:
 	size_t x, y, z;
 	double mass = 0;
 	double charge = 0;
-	int dir[2];
+	int dir[2]; //dir[0] <-> x, dir[1] <-> y
 	double energy;
 
-	double delta_en = 100;
+	double DELTA_EN = 100;
+	int MAX_ENERGY = 1000;
 
 	Molecule(Field field);
-	Molecule(size_t x, size_t y, size_t z);
+	Molecule();
 	void En_loss();
 };
 
