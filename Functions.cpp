@@ -16,6 +16,11 @@ void direction(Molecule& mol, Field& field)
 
 	std::vector<std::vector<double>> pot;
 
+	//Инициализация вектора pot
+	pot.resize(10);
+	for (auto c : pot)
+		c.resize(4);
+
 	//Случай, когда частица перемещается строго по  Oy (тут происходит заполнение массива потенциалов потенциалом :))
 	if (mol.dir[0] == 0)
 	{
@@ -113,20 +118,23 @@ void movement(Molecule& mol, Field& field)
 	//Энергия, обладая которой частица не может свободно двигаться
 	double crit_energy = 100;
 	//Проверка на возможность движения
-	if (mol.energy - mol.delta_en <= crit_energy)
+	if (mol.energy - mol.DELTA_EN <= crit_energy)
 	{
 		direction(mol, field);
 	}
 	//Случай, когда частица двигается вдоль осей:
 	if ((abs(mol.dir[0]) == 1 && mol.dir[1] == 0) || (abs(mol.dir[1]) == 1 && mol.dir[0] == 0))
 	{
-		if (field[mol.dir[0] == 1?(mol.x + 1):(mol.x -1)][mol.dir[1] == 1 ? (mol.y + 1) : (mol.y - 1)][mol.z][0] == 0) //Если последующая ячейка свободна
+
+		if (field[mol.x + 1*mol.dir[0]][mol.y + 1 * mol.dir[1]][mol.z][0] == 0) //Если последующая ячейка свободна
 		{
 			//Случай, когда частица переходит строго вперёд
-			if (field[mol.dir[0] == 1 ? (mol.x + 1) : (mol.x - 1)][mol.dir[1] == 1 ? (mol.y + 1) : (mol.y - 1)][mol.z - 1][0] == 1)
+			if (field[mol.x + 1 * mol.dir[0]][mol.y + 1 * mol.dir[1]][mol.z - 1][0] == 1)
 			{
 				mol.En_loss();
-				mol.dir[0] == 1 ? ++mol.x : --mol.x;
+				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из нвчальной координаты
+				mol.x += mol.dir[0];
+				mol.y += mol.dir[1];
 				field[mol.x][mol.y][mol.z][0] = 1;
 			}
 		//Здесь нужно добавить случай, когда есть возможность перехода на уровень вниз
@@ -207,13 +215,12 @@ void Field::potencial()
 
 }
 
-
 /*
 const std::vector<double>& Field::operator[](size_t i)
 const {
 	return zone[i];
-}
-*/
+}*/
+
 
 //*****Функции класса Molecule***********************************************************
 
@@ -224,21 +231,35 @@ Molecule::Molecule(Field field)
 	y = rand() % field.size[1];
 	z = 1;
 
-	dir[0] = 1;
-	dir[1] = 0;
+	int variants[3] = { 0, 1, -1 };
 
-	//energy = rand() % 1000;
-	energy = 1000;
+	//Выбор направления движения******Условный оператор нужен, чтобы нельзя было выбрать dir = {0, 0}
+	dir[0] = variants[rand() % 3];
+	dir[0] == 0 ? dir[1] = variants[rand() % 2 + 1] : dir[1] = variants[rand() % 3];
+
+	energy = rand() % MAX_ENERGY * 10;
+	energy /= 10;
+	energy = 150;
 
 }
 
-Molecule::Molecule(size_t _x, size_t _y, size_t _z)
+Molecule::Molecule()
 {
-	x = _x;
-	y = _y;
-	z = _z;
+	x = 5; //Для отладки
+	y = 5;
+	z = 1;
+
+
+	dir[0] = 0;
+	dir[0] = 1;
+
+	energy = 150;
+
+
+
 }
+
 void Molecule::En_loss()
 {
-	energy -= delta_en;
+	energy -= DELTA_EN;
 }
