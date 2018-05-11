@@ -269,7 +269,7 @@ const {
 
 
 //*****Функции класса Molecule***********************************************************
-/*
+
 Molecule::Molecule(Field field)
 {	
 	std::srand(std::time(nullptr));
@@ -293,23 +293,19 @@ Molecule::Molecule(Field field)
 	
 
 }
-*/
+/*
 Molecule::Molecule(Field field)
 {
 	x = 5; //Для отладки
 	y = 5;
 	z = 1;
 
-
 	dir[0] = 0;
 	dir[1] = 1;
 
 	energy = 150;
-
-
-
 }
-
+*/
 void Molecule::En_loss()
 {
 	energy -= DELTA_EN;
