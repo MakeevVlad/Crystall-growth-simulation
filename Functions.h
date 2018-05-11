@@ -48,7 +48,7 @@ public:
 	double energy;
 
 	double DELTA_EN = 100;
-	int MAX_ENERGY = 1000;
+	double MAX_ENERGY = 1000;
 
 	Molecule(Field field);
 	Molecule();
@@ -58,5 +58,10 @@ public:
 //Movements
 
 //Direction choice
-
-
+/*
+namespace shift
+{
+	void movement(Molecule& mol, Field& field);
+	void direction(Molecule& mol, Field& field);
+}
+*/

@@ -2,8 +2,17 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <ctime>
+#include <random>
 
 #include "Functions.h"
+
+
+//Для сортировки по первым элементам
+bool cmp(double* x, double* y)
+{
+	return *x > *y;
+}
 
 
 
@@ -18,27 +27,34 @@ void direction(Molecule& mol, Field& field)
 
 	//Инициализация вектора pot
 	pot.resize(10);
-	for (auto c : pot)
+	for (auto& c : pot)
 		c.resize(4);
 
 	//Случай, когда частица перемещается строго по  Oy (тут происходит заполнение массива потенциалов потенциалом :))
 	if (mol.dir[0] == 0)
 	{
-		//Направления движения частицы
-		if (mol.dir[1] ==  1) size_t y = mol.y + 1;
-		if (mol.dir[1] == -1) size_t y = mol.y - 1;
+		//Направления движения частицы(выбор следующей клетки)
+		size_t y = mol.y + mol.dir[0];
 
+		//Pot[0] - описание точки, на которой находится частица 
 		pot[0][0] = field[mol.x][mol.y][mol.z][1];
 		pot[0][1] = mol.x;
 		pot[0][2] = mol.y;
 		pot[0][3] = mol.z;
 
-		size_t y = mol.y;
 		size_t i = 1;
 		for (size_t x = mol.x - 1; x <= mol.x + 1; ++x)
 			for (size_t z = mol.z - 1; z <= mol.z + 1; ++z, ++i )
 			{
-				if (field[x][y][z][0] == 1) continue; //В простейшем случае свободная частица не может выбить уже закреплённую
+				if (field[x][y][z][0] == 1) //В простейшем случае свободная частица не может выбить уже закреплённую
+				{
+					pot[i][0] = 10000;
+					pot[i][1] = x;
+					pot[i][2] = y;
+					pot[i][3] = z;
+
+					continue;
+				}
 				pot[i][0] = field[x][y][z][1];
 				pot[i][1] = x;
 				pot[i][2] = y;
@@ -78,30 +94,54 @@ void direction(Molecule& mol, Field& field)
 	}
 
 
-	//Выбор направления
-	double p_r;
-	p_r = (rand() % 100) / 100;
-	size_t pot_size = sizeof(pot);
+	size_t pot_size = pot.size();
 	//Массив с вероятностями
 	std::vector<double> p(pot_size + 1);
+
+	//Для поиска максимумального и минимального потенциалов
+	double pot_max[2] { 0, 0 };//0 - значение, 1 - номер
+	double pot_min[2] { 1, 0 };//0 - значение, 1 - номер
+
+
+	//Эти два цикла отвечают за создание вектора вероятностей НЕприсоединения; если pot = 1000, то ничего не присоединиться
+	for (size_t i = 0; i < pot.size();++i)
+	{
+		if (pot[i][0] == 10000) continue;
+		p[pot.size()] += pot[i][0];
+		
+	}
+	for (size_t i = 0; i < pot.size(); ++i)
+	{	
+		if (pot[i][0] == 10000) { p[i] = 1; continue; }
+		//Вероятность присоединения в соответствующую точку 
+		p[i] = 1 - ( pot[i][0] / p[pot.size()] );
+
+		//Поиск максимальной вероятности
+		if (p[i] > pot_max[0] && p[i] != 1) { pot_max[0] = p[i]; pot_max[1] = i; };
+		//Поиск минимальной вероятности
+		if (p[i] < pot_min[0]) { pot_min[0] = p[i]; pot_min[1] = i; };
+	}
 	
 
-	for (size_t i = 0; i <= pot.size(); p[pot.size()] += pot[i][0], ++i);
-	for (size_t i = 0; i<=pot.size();p[i] = pot[i][0] / p[pot.size()], ++i);
+	//Выбор направления
+	double p_r;
+	std::srand(std::time(0));
+	p_r = std::rand() % size_t((pot_max[0] - pot_min[0] + 0.01) * 1000) + pot_min[0] * 1000 - 1;
+	p_r /= 1000;
 
-	if( p_r >= p[0])
+	if (p_r >= pot_max[0])
 	{
-		field[ size_t(pot[0][1]) ][size_t(pot[0][2])][size_t(pot[0][3])][0] = 1;
+		field[size_t(pot[pot_max[1]][1])][size_t(pot[pot_max[1]][2])][size_t(pot[pot_max[1]][3])][0] = 1;
 	}
 
-	if( p_r <= p[p.size() - 1])
+	if (p_r <= pot_min[0])
 	{
-		field[size_t(pot[0][1])][size_t(pot[0][2])][size_t(pot[0][3])][0] = 1;
+		field[size_t(pot[pot_min[1]][1])][size_t(pot[pot_min[1]][2])][size_t(pot[pot_min[1]][3])][0] = 1;
 	}
 
 	else
-		for (size_t j = 1; j <= sizeof(p); ++j)
-			if ( p_r< p[j] && p[j] >= p[j+1])
+		for (size_t j = 1; j <= p.size(); ++j)
+			if (p_r < p[j] && p_r >= p[j + 1])
 			{
 				field[size_t(pot[j][1]) ][size_t(pot[j][2]) ][ size_t(pot[j][3]) ][0] = 1;
 
@@ -126,10 +166,10 @@ void movement(Molecule& mol, Field& field)
 	if ((abs(mol.dir[0]) == 1 && mol.dir[1] == 0) || (abs(mol.dir[1]) == 1 && mol.dir[0] == 0))
 	{
 
-		if (field[mol.x + 1*mol.dir[0]][mol.y + 1 * mol.dir[1]][mol.z][0] == 0) //Если последующая ячейка свободна
+		if (field[mol.x + mol.dir[0]][mol.y + mol.dir[1]][mol.z][0] == 0) //Если последующая ячейка свободна
 		{
 			//Случай, когда частица переходит строго вперёд
-			if (field[mol.x + 1 * mol.dir[0]][mol.y + 1 * mol.dir[1]][mol.z - 1][0] == 1)
+			if (field[mol.x + mol.dir[0]][mol.y + mol.dir[1]][mol.z - 1][0] == 1)
 			{
 				mol.En_loss();
 				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из нвчальной координаты
@@ -208,10 +248,16 @@ std::vector<std::vector<std::vector<double>>>& Field::operator[](size_t i)
 
 void Field::potencial()
 {
+	//Генератор случайных чисел(uniform distribution)
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<> uniform(0, 1000);
+
+	std::srand(std::time(nullptr));
 	for (auto& y : zone)
 		for (auto& z : y)
 			for (auto& val : z)
-				val[1] += 1000;
+				val[1] += uniform(gen);
 
 }
 
@@ -223,10 +269,11 @@ const {
 
 
 //*****Функции класса Molecule***********************************************************
-
+/*
 Molecule::Molecule(Field field)
-{
-
+{	
+	std::srand(std::time(nullptr));
+	
 	x = rand() % field.size[0];
 	y = rand() % field.size[1];
 	z = 1;
@@ -237,13 +284,17 @@ Molecule::Molecule(Field field)
 	dir[0] = variants[rand() % 3];
 	dir[0] == 0 ? dir[1] = variants[rand() % 2 + 1] : dir[1] = variants[rand() % 3];
 
-	energy = rand() % MAX_ENERGY * 10;
-	energy /= 10;
-	energy = 150;
+	//Генератор случайных чисел(uniform distribution)
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<> uniform(0, MAX_ENERGY);
+
+	energy = uniform(gen);
+	
 
 }
-
-Molecule::Molecule()
+*/
+Molecule::Molecule(Field field)
 {
 	x = 5; //Для отладки
 	y = 5;
@@ -251,7 +302,7 @@ Molecule::Molecule()
 
 
 	dir[0] = 0;
-	dir[0] = 1;
+	dir[1] = 1;
 
 	energy = 150;
 
