@@ -9,9 +9,31 @@
 
 
 //Для сортировки по первым элементам
-bool cmp(double* x, double* y)
+void qsort(std::vector<double> *mas, size_t size) 
 {
-	return *x > *y;
+	
+	int i = 0;
+	int j = size - 1;
+	int mid = mas[size / 2][0];
+
+	do {
+
+		while (mas[i][0] < mid) i++;
+		while (mas[j][0] > mid) j--;
+
+		if (i <= j) {
+			int tmp = mas[i][0];
+			for (size_t c = 0; c <= mas[i].size(); ++i)
+				std::swap(mas[i][c], mas[j][c]);
+			
+			i++;
+			j--;
+		}
+	} while (i <= j);
+
+
+	if (j > 0)	qsort(mas, j + 1);
+	if (i < size)	qsort(&mas[i], size - i);
 }
 
 
@@ -129,22 +151,44 @@ void direction(Molecule& mol, Field& field)
 	p_r = std::rand() % size_t((pot_max[0] - pot_min[0] + 0.01) * 1000) + pot_min[0] * 1000 - 1;
 	p_r /= 1000;
 
-	if (p_r >= pot_max[0])
+	//Внимание КАСТЫЛЬ!!! НЕОБХОДИМО БУДЕТ ИСПРАВИТЬ(тут сортируется только один вектор, а координаты впоследствии выравниваются исходя из равенства вероятностей)
+	for (size_t i = 0; i < pot.size(); pot[i][0] = p[i], ++i);
+	std::sort(p.begin(), p.end());
+
+	for (size_t i = 0; i < pot.size(); ++i)
+		for (size_t j = 0; j < pot.size(); ++j)
+		{
+			if (pot[i][0] == p[j])
+				for (size_t c = 0; c < 3; ++c)
+					std::swap(pot[j][c], pot[i][c]);
+		}
+	//Конец костыля________УБРАТЬ!!!!! Необходимо написать функцию нормальной сортировки
+
+	if (p_r >= pot_max[0] && p_r < 1)
 	{
+		field[mol.x][mol.y][mol.z][0] = 0;
 		field[size_t(pot[pot_max[1]][1])][size_t(pot[pot_max[1]][2])][size_t(pot[pot_max[1]][3])][0] = 1;
+		return;
 	}
 
 	if (p_r <= pot_min[0])
-	{
+	{	
+		field[mol.x][mol.y][mol.z][0] = 0;
 		field[size_t(pot[pot_min[1]][1])][size_t(pot[pot_min[1]][2])][size_t(pot[pot_min[1]][3])][0] = 1;
+		return;
 	}
 
 	else
-		for (size_t j = 1; j <= p.size(); ++j)
-			if (p_r < p[j] && p_r >= p[j + 1])
-			{
-				field[size_t(pot[j][1]) ][size_t(pot[j][2]) ][ size_t(pot[j][3]) ][0] = 1;
+		for (size_t j = 1; j < p.size()-1; ++j)
+			if (p_r > p[j] && p_r <= p[j + 1] )
+			{	
+				field[mol.x][mol.y][mol.z][0] = 0;
+				mol.x = size_t(pot[j + 1][1]);
+				mol.y = size_t(pot[j + 1][2]);
+				mol.z = size_t(pot[j + 1][3]);
 
+				field[size_t(pot[j + 1][1]) ][size_t(pot[j + 1][2]) ][ size_t(pot[j + 1][3]) ][0] = 1;
+				return;
 			}
 
 }
@@ -269,7 +313,7 @@ const {
 
 
 //*****Функции класса Molecule***********************************************************
-
+/*
 Molecule::Molecule(Field field)
 {	
 	std::srand(std::time(nullptr));
@@ -293,19 +337,23 @@ Molecule::Molecule(Field field)
 	
 
 }
-/*
+*/
 Molecule::Molecule(Field field)
 {
 	x = 5; //Для отладки
 	y = 5;
 	z = 1;
 
+
 	dir[0] = 0;
 	dir[1] = 1;
 
 	energy = 150;
+
+
+
 }
-*/
+
 void Molecule::En_loss()
 {
 	energy -= DELTA_EN;
