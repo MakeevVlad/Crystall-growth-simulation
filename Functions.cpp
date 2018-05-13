@@ -82,7 +82,9 @@ void direction(Molecule& mol, Field& field)
 		for (size_t x = mol.x - 1; x <= mol.x + 1; ++x)
 			for (size_t z = mol.z - 1; z <= mol.z + 1; ++z, ++i )
 			{
-				if (field[x][y][z][0] == 1) //В простейшем случае свободная частица не может выбить уже закреплённую
+				if ((field[x][y][z][0] == 1 || field[x][y][z == 0 ? 0 : z - 1][0] == 0) || z == 0)
+				//В простейшем случае свободная частица не может выбить уже закреплённую
+				// Также она не может повиснуть в воздухе
 				{
 					pot[i][0] = 10000;
 					pot[i][1] = x;
@@ -101,21 +103,33 @@ void direction(Molecule& mol, Field& field)
 	//Случай, когда частица перемещается строго по Ox (тут происходит заполнение массива потенциалов потенциалом :) )
 	if (mol.dir[0] != 0 && mol.dir[1] != 1)
 	{
-		//Направления движения частицы
-		if (mol.dir[1] ==  1) size_t x = mol.x + 1;
-		if (mol.dir[1] == -1) size_t x = mol.x - 1;
 
+		size_t x_max = field.get_size_x(), y_max = field.get_size_y();
+		//Направления движения частицы
+		size_t x = (mol.x + mol.dir[0]) % x_max;
+
+		//Pot[0] - описание точки, на которой находится частица 
 		pot[0][0] = field[mol.x][mol.y][mol.z][1];
 		pot[0][1] = mol.x;
 		pot[0][2] = mol.y;
 		pot[0][3] = mol.z;
 
 		size_t i = 1;
-		size_t x = mol.x;
-		for (size_t y = mol.y - 1; y <= mol.y + 1; ++y)
-			for (size_t z = mol.z - 1; z <= mol.z + 1; ++z, ++i )
+		for (size_t y = abs(int(mol.y) - 1) % x_max; y <= (mol.y + 1) % x_max; ++y)
+			for (size_t z = mol.z -1 ; z <= mol.z; ++z, ++i )
 			{
-				if (field[x][y][z][0] == 1) continue; //В простейшем случае свободная частица не может выбить уже закреплённую
+
+				if ( (field[x][y][z][0] == 1 || field[x][y][z == 0 ? 0 : z - 1 ][0] == 0) || z == 0)
+				//В простейшем случае свободная частица не может выбить уже закреплённую
+				// Также она не может повиснуть в воздухе
+				{
+					pot[i][0] = 10000;
+					pot[i][1] = x;
+					pot[i][2] = y;
+					pot[i][3] = z;
+
+					continue;
+				}
 				pot[i][0] = field[x][y][z][1];
 				pot[i][1] = x;
 				pot[i][2] = y;
@@ -208,7 +222,7 @@ void direction(Molecule& mol, Field& field)
 }
 
 //Эта функция отвечает за перемещение частицы
-void movement(Molecule& mol, Field& field)
+bool movement(Molecule& mol, Field& field)
 {	
 	//Для случая, если частица совершает первое перемещение
 	field[mol.x][mol.y][mol.z][0] = 1;
@@ -219,23 +233,53 @@ void movement(Molecule& mol, Field& field)
 	if (mol.energy - mol.DELTA_EN <= crit_energy)
 	{
 		direction(mol, field);
+		return 1;
 	}
+
+	size_t x_max = field.get_size_x(), y_max = field.get_size_y();
+
 	//Случай, когда частица двигается вдоль осей:
+	//!!! % cord_max означает, что частица при переходе за поле автоматически перемещается нв другую его сторону
 	if ((abs(mol.dir[0]) == 1 && mol.dir[1] == 0) || (abs(mol.dir[1]) == 1 && mol.dir[0] == 0))
 	{
-
-		if (field[mol.x + mol.dir[0]][mol.y + mol.dir[1]][mol.z][0] == 0) //Если последующая ячейка свободна
+		if (field[(mol.x + mol.dir[0]) % x_max][(mol.y + mol.dir[1]) % y_max][mol.z][0] == 0) //Если последующая ячейка свободна
 		{
 			//Случай, когда частица переходит строго вперёд
-			if (field[mol.x + mol.dir[0]][mol.y + mol.dir[1]][mol.z - 1][0] == 1)
+			if (field[(mol.x + mol.dir[0]) % x_max][(mol.y + mol.dir[1]) % y_max][mol.z - 1][0] == 1)
 			{
 				mol.En_loss();
-				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из нвчальной координаты
+				field[mol.x % x_max][mol.y % x_max][mol.z][0] = 0; //Убираем молекулу из нвчальной координаты
+				mol.x = abs(int(mol.x) + mol.dir[0]) % x_max;
+				mol.y = abs(int(mol.y) + mol.dir[1]) % y_max;
+				field[mol.x % x_max][mol.y % y_max][mol.z][0] = 1;
+				return 0;
+			}
+			//Случай, когда частица переходит на уровень вниз
+			else
+			{
+				mol.En_loss();
+				field[mol.x % x_max][mol.y % y_max][mol.z][0] = 0; //Убираем молекулу из нвчальной координаты
 				mol.x += mol.dir[0];
 				mol.y += mol.dir[1];
-				field[mol.x][mol.y][mol.z][0] = 1;
+				//"Падение" частицы
+				while (field[(mol.x + mol.dir[0]) % x_max][(mol.y + mol.dir[1]) % y_max][mol.z - 1][0] == 0) --mol.z;
+
+				field[mol.x % x_max][mol.y % y_max][mol.z][0] = 1;
+				return 0;
 			}
-		//Здесь нужно добавить случай, когда есть возможность перехода на уровень вниз
+		}
+		//Если последующая ячейка занята(происходит выбор между отражением и переходом наверх)
+		else
+		{
+			//Отражение
+			try
+			{
+				mol.dir[0] *= -1;
+				mol.dir[1] *= -1;
+				movement(mol, field);
+			}
+			catch (...) { return 0; }
+
 		}
 	}
 }
@@ -327,16 +371,17 @@ const {
 
 
 //*****Функции класса Molecule***********************************************************
-
+/*
 Molecule::Molecule(Field field)
 {	
 	std::srand(std::time(nullptr));
 	
 	x = rand() % field.size[0];
 	y = rand() % field.size[1];
-	z = 1;
+	z = field.get_size_z() - 1;
+	while (field[x][y][z - 1][0] == 0) --z;
 
-	int variants[3] = { 0, 1, -1 };
+	int variants[3] = { 0, 1,-1 };
 
 	//Выбор направления движения******Условный оператор нужен, чтобы нельзя было выбрать dir = {0, 0}
 	dir[0] = variants[rand() % 3];
@@ -351,7 +396,7 @@ Molecule::Molecule(Field field)
 	
 
 }
-
+*/
 Molecule::Molecule(Field field)
 {
 	x = 5; //Для отладки
@@ -359,13 +404,19 @@ Molecule::Molecule(Field field)
 	z = 1;
 
 
-	dir[0] = 0;
-	dir[1] = 1;
+	dir[0] = -1;
+	dir[1] = 0;
 
 	energy = 350;
 
 
 
+}
+
+
+Molecule::~Molecule()
+{
+	delete &x, &y, &z, dir, &energy;
 }
 
 void Molecule::En_loss()

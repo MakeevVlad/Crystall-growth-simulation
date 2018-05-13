@@ -48,11 +48,14 @@ public:
 	double energy;
 
 	double DELTA_EN = 100;
-	double MAX_ENERGY = 1000;
+	double MAX_ENERGY = 400;
 
 	Molecule(Field field);
 	Molecule();
+	~Molecule();
+
 	void En_loss();
+	
 };
 
 //Movements
