@@ -4,6 +4,7 @@
 #include <cmath>
 #include <ctime>
 #include <random>
+#include <fstream>
 
 #include "Functions.h"
 
@@ -36,7 +37,20 @@ void qsort(std::vector<double> *mas, size_t size)
 	if (i < size)	qsort(&mas[i], size - i);
 }
 
-
+void collect_data(Field& field)
+{
+	std::ofstream file("crystal.txt", std::ios::out);
+	size_t i = 0, j = 0, k = 0;
+	for (auto& x : field.zone) { ++i; j = 0;
+		for (auto& y : x) { ++j; k = 0;
+			for (auto& z : y) { ++k;
+				if (z[0] == 1 && k !=1)
+					file << i - 1 << " " << j - 1 << " " << k - 1 << std::endl;
+			}
+		}
+	}
+	file.close();
+}
 
 //*****Фунции движения********************************************************************
 
@@ -313,7 +327,7 @@ const {
 
 
 //*****Функции класса Molecule***********************************************************
-/*
+
 Molecule::Molecule(Field field)
 {	
 	std::srand(std::time(nullptr));
@@ -337,7 +351,7 @@ Molecule::Molecule(Field field)
 	
 
 }
-*/
+
 Molecule::Molecule(Field field)
 {
 	x = 5; //Для отладки
@@ -348,7 +362,7 @@ Molecule::Molecule(Field field)
 	dir[0] = 0;
 	dir[1] = 1;
 
-	energy = 150;
+	energy = 350;
 
 
 
