@@ -371,13 +371,20 @@ const {
 
 
 //*****Функции класса Molecule***********************************************************
-/*
+
 Molecule::Molecule(Field field)
 {	
 	std::srand(std::time(nullptr));
-	
-	x = rand() % field.size[0];
-	y = rand() % field.size[1];
+	//Генератор случайных чисел(uniform distribution)
+	std::random_device rd;
+	std::mt19937 gen(rd());
+
+	std::uniform_real_distribution<> uniform_x(0, field.size[0]);
+	std::uniform_real_distribution<> uniform_y(0, field.size[1]);
+	x = uniform_x(gen);
+	y = uniform_y(gen);
+	//x = rand() % field.size[0];
+	//y = rand() % field.size[1];
 	z = field.get_size_z() - 1;
 	while (field[x][y][z - 1][0] == 0) --z;
 
@@ -385,21 +392,18 @@ Molecule::Molecule(Field field)
 
 	//Выбор направления движения******Условный оператор нужен, чтобы нельзя было выбрать dir = {0, 0}
 	dir[0] = variants[rand() % 3];
-	dir[0] == 0 ? dir[1] = variants[rand() % 2 + 1] : dir[1] = variants[rand() % 3];
+	dir[0] == 0 ? dir[1] = variants[rand() % 2 + 1] : dir[0] = 0;
 
-	//Генератор случайных чисел(uniform distribution)
-	std::random_device rd;
-	std::mt19937 gen(rd());
+
 	std::uniform_real_distribution<> uniform(0, MAX_ENERGY);
-
 	energy = uniform(gen);
 	
 
 }
-*/
+/*
 Molecule::Molecule(Field field)
 {
-	x = 5; //Для отладки
+	x = 8; //Для отладки
 	y = 5;
 	z = 1;
 
@@ -412,7 +416,7 @@ Molecule::Molecule(Field field)
 
 
 }
-
+*/
 
 Molecule::~Molecule()
 {
