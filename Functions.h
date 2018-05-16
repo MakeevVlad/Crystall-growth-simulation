@@ -6,7 +6,6 @@
 typedef std::vector<std::vector<std::vector<double>>> tdim_vec;
 
 
-
 class Field
 {
 
@@ -48,7 +47,7 @@ public:
 	double energy;
 
 	double DELTA_EN = 100;
-	double MAX_ENERGY = 400;
+	double MAX_ENERGY = 650;
 
 	Molecule(Field field);
 	Molecule();
