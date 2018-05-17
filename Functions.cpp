@@ -67,12 +67,13 @@ void direction(Molecule& mol, Field& field)
 	for (auto& c : pot)
 		c.resize(4);
 
-	//Случай, когда частица перемещается строго по  Oy (тут происходит заполнение массива потенциалов потенциалом :))
+	//Случай, когда частица перемещается строго по Oy (тут происходит заполнение массива потенциалов потенциалом :))
 	if (mol.dir[0] == 0)
 	{
+
 		size_t x_max = field.get_size_x(), y_max = field.get_size_y();
 		//Направления движения частицы(выбор следующей клетки)
-		size_t y = mol.y + mol.dir[0];
+		size_t y = mol.y != 0 ? (mol.y + mol.dir[1]) % y_max : 9;
 
 		//Pot[0] - описание точки, на которой находится частица 
 		pot[0][0] = field[mol.x][mol.y][mol.z][1];
@@ -81,10 +82,10 @@ void direction(Molecule& mol, Field& field)
 		pot[0][3] = mol.z;
 
 		size_t i = 1;
-		for (size_t x = (mol.x - 1) % x_max; x <= (mol.x + 1) % x_max; ++x)
+		for (size_t x = (mol.x != 0 ? mol.x - 1 : 9); x <= (mol.x + 1) % x_max; x = (++x) % x_max)
 			for (size_t z = mol.z - 1; z <= mol.z + 1; ++z, ++i )
 			{
-				if ((field[x][y][z][0] == 1 || field[x][y][z == 0 ? 0 : z - 1][0] == 0) || z == 0)
+				if (field[x][y][z][0] == 1 || field[x][y][z == 0 ? 0 : z - 1][0] == 0 || z == 0)
 				//В простейшем случае свободная частица не может выбить уже закреплённую
 				// Также она не может повиснуть в воздухе
 				{
@@ -103,12 +104,12 @@ void direction(Molecule& mol, Field& field)
 	}
 
 	//Случай, когда частица перемещается строго по Ox (тут происходит заполнение массива потенциалов потенциалом :) )
-	if (mol.dir[0] != 0 && mol.dir[1] != 1)
+	if (mol.dir[0] != 0 && abs(mol.dir[1]) != 1)
 	{
 
 		size_t x_max = field.get_size_x(), y_max = field.get_size_y();
 		//Направления движения частицы
-		size_t x = (mol.x + mol.dir[0]) % x_max;
+		size_t x = mol.x != 0 ? (mol.x + mol.dir[0]) % x_max : 9;
 
 		//Pot[0] - описание точки, на которой находится частица 
 		pot[0][0] = field[mol.x][mol.y][mol.z][1];
@@ -117,11 +118,11 @@ void direction(Molecule& mol, Field& field)
 		pot[0][3] = mol.z;
 
 		size_t i = 1;
-		for (size_t y = abs(int(mol.y) - 1) % y_max; y <= (mol.y + 1) % y_max; ++y)
-			for (size_t z = mol.z -1 ; z <= mol.z; ++z, ++i )
+		for (size_t y = ( mol.y !=0 ? (int(mol.y) - 1) % y_max : 9) ; y <= (mol.y + 1) % y_max; y = (++y) % y_max)
+			for (size_t z = mol.z - 1 ; z <= mol.z + 1; ++z, ++i )
 			{
 
-				if ( (field[x][y][z][0] == 1 || field[x][y][z == 0 ? 0 : z - 1 ][0] == 0) || z == 0)
+				if ( field[x][y][z][0] == 1 || field[x][y][z == 0 ? 0 : z - 1 ][0] == 0 || z == 0)
 				//В простейшем случае свободная частица не может выбить уже закреплённую
 				// Также она не может повиснуть в воздухе
 				{
@@ -181,18 +182,23 @@ void direction(Molecule& mol, Field& field)
 		}
 	//Конец костыля________УБРАТЬ!!!!! Необходимо написать функцию нормальной сортировки
 
+	if (pot[0][0] == 0)
+	{
+		return;
+	}
 	//Для поиска максимумального и минимального потенциалов
 	double pot_max[2]{ 0, 0 };//0 - значение, 1 - номер
 	double pot_min[2]{ 1, 0 };//0 - значение, 1 - номер
 
-	for (size_t i = 0; i < pot.size(); ++i)
-	{
-		//Поиск максимальной вероятности
-		if (p[i] > pot_max[0] && p[i] != 1) { pot_max[0] = p[i]; pot_max[1] = i; };
-		//Поиск минимальной вероятности
-		if (p[i] < pot_min[0]) { pot_min[0] = p[i]; pot_min[1] = i; };
-	}
-
+		for (size_t i = 0; i < pot.size(); ++i)
+		{
+			//Поиск максимальной вероятности
+			if (p[i] > pot_max[0] && p[i] != 1) { pot_max[0] = p[i]; pot_max[1] = i; };
+			//Поиск минимальной вероятности
+			if (p[i] < pot_min[0]) { pot_min[0] = p[i]; pot_min[1] = i; };
+		}
+	
+	
 	//Выбор направления
 
 	std::cout << "oops" << std::endl;
