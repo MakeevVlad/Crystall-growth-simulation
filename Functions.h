@@ -28,7 +28,8 @@ public:
 	size_t& get_size_z();
 
 	//Задаёт карту потенциала
-	void potencial();
+	void potencial_uniform();
+	void lj_potencial();
 
 	//Взятие индекса
 	std::vector<std::vector<std::vector<double>>>& operator[](size_t i);

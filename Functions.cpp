@@ -73,7 +73,7 @@ void direction(Molecule& mol, Field& field)
 
 		size_t x_max = field.get_size_x(), y_max = field.get_size_y();
 		//Направления движения частицы(выбор следующей клетки)
-		size_t y = mol.y != 0 ? (mol.y + mol.dir[1]) % y_max : 9;
+		size_t y = mol.y != 0 ? (mol.y + mol.dir[1]) % y_max : y_max;
 
 		//Pot[0] - описание точки, на которой находится частица 
 		pot[0][0] = field[mol.x][mol.y][mol.z][1];
@@ -82,10 +82,10 @@ void direction(Molecule& mol, Field& field)
 		pot[0][3] = mol.z;
 
 		size_t i = 1;
-		for (size_t x = (mol.x != 0 ? mol.x - 1 : 9); x <= (mol.x + 1) % x_max; x = (++x) % x_max)
+		for (size_t x = (mol.x != 0 ? mol.x - 1 : x_max - 1); x <= (mol.x + 1) % x_max; x = (++x) % x_max)
 			for (size_t z = mol.z - 1; z <= mol.z + 1; ++z, ++i )
 			{
-				if (field[x][y][z][0] == 1 || field[x][y][z == 0 ? 0 : z - 1][0] == 0 || z == 0)
+				if (field[x][y][z][0] == 1 || field[x][y][z == 0 ? 0 : z - 1][0] == 0 )
 				//В простейшем случае свободная частица не может выбить уже закреплённую
 				// Также она не может повиснуть в воздухе
 				{
@@ -109,7 +109,7 @@ void direction(Molecule& mol, Field& field)
 
 		size_t x_max = field.get_size_x(), y_max = field.get_size_y();
 		//Направления движения частицы
-		size_t x = mol.x != 0 ? (mol.x + mol.dir[0]) % x_max : 9;
+		size_t x = mol.x != 0 ? (mol.x + mol.dir[0]) % x_max : x_max;
 
 		//Pot[0] - описание точки, на которой находится частица 
 		pot[0][0] = field[mol.x][mol.y][mol.z][1];
@@ -118,11 +118,11 @@ void direction(Molecule& mol, Field& field)
 		pot[0][3] = mol.z;
 
 		size_t i = 1;
-		for (size_t y = ( mol.y !=0 ? (int(mol.y) - 1) % y_max : 9) ; y <= (mol.y + 1) % y_max; y = (++y) % y_max)
+		for (size_t y = ( mol.y !=0 ? mol.y - 1: y_max - 1) ; y <= (mol.y + 1) % y_max; y = (++y) % y_max)
 			for (size_t z = mol.z - 1 ; z <= mol.z + 1; ++z, ++i )
 			{
 
-				if ( field[x][y][z][0] == 1 || field[x][y][z == 0 ? 0 : z - 1 ][0] == 0 || z == 0)
+				if ( field[x][y][z][0] == 1 || field[x][y][z == 0 ? 0 : z - 1 ][0] == 0)
 				//В простейшем случае свободная частица не может выбить уже закреплённую
 				// Также она не может повиснуть в воздухе
 				{
@@ -387,9 +387,8 @@ std::vector<std::vector<std::vector<double>>>& Field::operator[](size_t i)
 	return zone[i];
 }
 
-//template <typename T>
 
-void Field::potencial()
+void Field::potencial_uniform()
 {
 	//Генератор случайных чисел(uniform distribution)
 	std::random_device rd;
@@ -403,6 +402,32 @@ void Field::potencial()
 				val[1] += uniform(gen);
 
 }
+//Задание потенциала по формуле Леннарда-Джонса
+void Field::lj_potencial()
+{
+	const double a1 = 1;
+	const double a2 = 1;
+
+	 for (double x = 0; x < size[0]; ++x)
+		 for (double y = 0; y < size[1]; ++y)
+			 for (double z = 0; z < size[2]; ++z)
+			 {
+				 for (double x1 = 0; x1 < size[0]; ++x1)
+					 for (double y1 = 0; y1 < size[1]; ++y1)
+						 for (double z1 = 0; z1 < size[2]; ++z1)
+						 {
+							 if (zone[size_t(x1)][size_t(y1)][size_t(z1)][0] == 1 && (x != x1 || y != y1 || z != z1))
+							 {
+								 double r = sqrt((x - x1)*(x - x1) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
+								 zone[size_t(x)][size_t(y)][size_t(z)][1] += (a1 / pow(r, 12)) - (a2 / pow(r, 6));
+							 }
+						 }
+
+			 }
+
+}
+
+
 
 /*
 const std::vector<double>& Field::operator[](size_t i)
