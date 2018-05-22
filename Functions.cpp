@@ -267,6 +267,29 @@ void direction(Molecule& mol, Field& field)
 	*/
 }
 
+
+//Функция отвечающая за отражение частицы
+void movement_reflection(Molecule& mol, Field& field)
+{
+	mol.along();
+	mol.dir[0] *= -1;
+	mol.dir[1] *= -1;
+}
+//Функция отвечающая за восхождение :)
+void movement_ascent(Molecule& mol, Field& field)
+{
+
+
+
+
+}
+//Функция отвечающая за кооксиальное движение
+void along_movement(Molecule& mol, Field& field)
+{
+
+}
+
+
 //Эта функция отвечает за перемещение частицы
 bool movement(Molecule& mol, Field& field)
 {
@@ -298,6 +321,7 @@ bool movement(Molecule& mol, Field& field)
 	//Координаты точки по направлению(вынесено, чтобы каждый раз не писать)
 	size_t _X = mol.x != 0 ? (mol.x + mol.dir[0]) % x_max : (x_max + mol.dir[0]) % x_max;
 	size_t _Y = mol.y != 0 ? (mol.y + mol.dir[1]) % y_max : (y_max + mol.dir[1]) % y_max;
+	size_t _Z = mol.z + 1;
 
 	//Случай, когда частица двигается вдоль осей:
 	//!!! % cord_max означает, что частица при переходе за поле автоматически перемещается нв другую его сторону
@@ -329,24 +353,16 @@ bool movement(Molecule& mol, Field& field)
 			//Случай, когда частица переходит на уровень вниз
 			else
 			{
-				//Проверка на возможность движения
-				if (mol.energy - mol.FALLING_EN <= mol.CRIT_EN)
-				{
-					direction(mol, field);
-					return 1;
-				}
-
-				mol.falling();
-
 				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
 
 				//Следующие координаты
 				mol.x = _X;
 				mol.y = _Y;
 
+				size_t n = 0;
 				//"Падение" частицы
-				while (field[(mol.x + mol.dir[0]) % x_max][(mol.y + mol.dir[1]) % y_max][mol.z - 1][0] == 0) --mol.z;
-				
+				while (field[mol.x][mol.y][mol.z - 1][0] == 0) { --mol.z;  ++n;}
+				mol.falling();
 				field[mol.x][mol.y][mol.z][0] = 1;
 				return 0;
 			}
@@ -354,25 +370,61 @@ bool movement(Molecule& mol, Field& field)
 		//Если последующая ячейка занята(происходит выбор между отражением и переходом наверх)
 		else
 		{
-			//Отражение
 
-			//Проверка на возможность движения
-			if (mol.energy - mol.ALONG_EN <= mol.CRIT_EN)
+			//Подсчет количества я чеек подъёма
+			size_t n = 1;
+			while (field[_X][_Y][_Z][0] == 1) {	++n; ++_Z;	}
+
+
+			//Вероятности p_reflect - отражения and p_ascent - поднятия на уровень
+			double p_reflect = 1 / (1 + mol.ALONG_EN / (n * mol.ASCENT_EN));
+			double p_ascent  = 1 - p_reflect;
+			
+			//Генерируем вероятность
+			std::srand(std::time(0));
+			double p = (rand() % 1000) / 1000;
+
+			
+			if( p <= p_ascent) //Подъём
+			{
+				//Проверка на возможность движения
+				if (mol.energy - n * mol.ASCENT_EN <= mol.CRIT_EN)
+				{
+					direction(mol, field);
+					return 1;
+				}
+				
+				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
+
+				//Следующие координаты
+				mol.x = _X; 
+				mol.y = _Y;
+
+				field[mol.x][mol.y][mol.z + n][0] = 1;
+				return 0;
+
+			}
+			
+			else //Отражение
+			{	
+
+				//Проверка на возможность движения
+				if (mol.energy - mol.ALONG_EN <= mol.CRIT_EN)
 				{
 					direction(mol, field);
 					return 1;
 				}
 
-			mol.along();
+				movement_reflection(mol, field);
+				movement(mol, field) == 1? 1 : 0;
+				
 
-			mol.dir[0] *= -1;
-			mol.dir[1] *= -1;
-			movement(mol, field);
-
+			}	
 
 		}
 	}
 }
+
 
 
 //*****Функции класса Field***************************************************************
@@ -528,14 +580,14 @@ Molecule::~Molecule()
 
 
 //выйгрыш энергии частицой при переходе на уровень вниз
-void Molecule::falling()
+void Molecule::falling(size_t n)
 {
-	energy += FALLING_EN;
+	energy += n*FALLING_EN;
 }
 //Потеря энергии частицой при переходе на уровень вверх
-void Molecule::ascent()
+void Molecule::ascent(size_t n)
 {
-	energy -= ASCENT_EN;
+	energy -= n*ASCENT_EN;
 }
 //Потеря энергии при движении по оси
 void Molecule::along()

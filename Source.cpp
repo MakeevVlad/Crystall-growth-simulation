@@ -4,32 +4,66 @@
 #include <random>
 #include "Functions.h"
 
-void movement(Molecule& mol, Field& field);
+bool movement(Molecule& mol, Field& field);
 void direction(Molecule& mol, Field& field);
+void collect_data(Field& field);
+
 
 int main()
 {
 
 
-	size_t x, y;
-	double z = 0;
-	x = 10;
-	y = 10;
-	std::srand(std::time(nullptr));
 
-	
-	double ch;
-
-	
 	Field field(10, 10, 10);
-	
-	ch = field.get_size_x();
-	Molecule mol(field);
-	//field.potencial() ;
-	field.potencial();
 
-	movement(mol, field);
 	
-	return 0;
+	Molecule mol[121] = { Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
+						Molecule(field)};
+ 
+	
+	Field field1(10, 10, 10);
+
+	size_t i = 0;
+
+	for (int j = 0; j < 121 ; ++j)
+	{
+		do
+		{
+			i = movement(mol[j], field1);
+
+		} while (i == 0);
+
+		i = 0;
+
+
+	}
+
+
+	collect_data(field1);
+	system("show.py");
+	system("pause");
 }
 

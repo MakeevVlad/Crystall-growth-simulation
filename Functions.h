@@ -52,7 +52,7 @@ public:
 	double ASCENT_EN = 3;
 	double FALLING_EN = 2;
 
-	double MAX_ENERGY = 10;
+	double MAX_ENERGY = 20;
 	double CRIT_EN = 1;
 	//Конструкторы
 	 Molecule();
@@ -62,9 +62,9 @@ public:
 	Molecule(Field field, size_t _x, size_t _y, size_t _z, int dir0, int dir1);
 	
 	//выйгрыш энергии частицой при переходе на уровень вниз
-	void falling();
+	void falling(size_t n = 1);
 	//Потеря энергии частицой при переходе на уровень вверх
-	void ascent();
+	void ascent(size_t n = 1);
 	//Потеря энергии при движении по оси
 	void along();
 };
