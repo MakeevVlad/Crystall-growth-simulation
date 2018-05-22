@@ -6,6 +6,7 @@
 typedef std::vector<std::vector<std::vector<double>>> tdim_vec;
 
 
+
 class Field
 {
 
@@ -52,7 +53,7 @@ public:
 	double FALLING_EN = 2;
 
 	double MAX_ENERGY = 10;
-
+	double CRIT_EN = 1;
 	//Конструкторы
 	 Molecule();
 	~Molecule();

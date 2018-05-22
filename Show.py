@@ -23,6 +23,13 @@ for line in f:
 	z.append(nums[2])
 	pot.append(np.abs(nums[3]))
 
-gp.scatter(x, y, z, cmap = pot)
+
+
+bottom = np.zeros_like(z)
+width = depth = 1
+
+gp.bar3d(x, y, bottom, width, depth, z)
+
+#gp.plot_wireframe(x, y, z)
 
 plt.show()

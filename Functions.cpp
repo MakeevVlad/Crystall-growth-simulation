@@ -12,17 +12,7 @@
 void collect_data(Field& field)
 {
 	std::ofstream file("crystal.txt", std::ios::out);
-	/*
-	size_t i = 0, j = 0, k = 0;
-	for (auto& x : field.zone) { ++i; j = 0;
-		for (auto& y : x) { ++j; k = 0;
-			for (auto& z : y) { ++k;
-				for(std::vector<double>& val: z)
-				if (val[0] == 1 && k !=1)
-					file << i - 1 << " " << j - 1 << " " << k - 1 << " " << val[1] << std::endl;
-			}
-		}
-	}*/
+
 	for (double x = 0; x < field.size[0]; ++x)
 		for (double y = 0; y < field.size[1]; ++y)
 			for (double z = 1; z < field.size[2]; ++z)
@@ -204,12 +194,9 @@ void direction(Molecule& mol, Field& field)
 	}
 
 	field[mol.x][mol.y][mol.z][0] = 0;
-	//std::cout << mol.x << mol.y << mol.z << " ";
 	mol.x = size_t(pot[num][1]);
 	mol.y = size_t(pot[num][2]);
 	mol.z = size_t(pot[num][3]);
-
-	//std::cout << mol.x << mol.y << mol.z << std::endl;
 
 	if(field[mol.x][mol.y][mol.z][0] == 1) std::cout << "OOO no " << std::endl;
 
@@ -293,14 +280,13 @@ bool movement(Molecule& mol, Field& field)
 			std::cout << " ->" << mol.z;
 		}
 
-
 	//Для случая, если частица совершает первое перемещение
 	field[mol.x][mol.y][mol.z][0] = 1;
 
 	//Энергия, обладая которой частица не может свободно двигаться
-	double crit_energy = 1;
+	
 	//Проверка на возможность движения
-	if (mol.energy - mol.ALONG_EN <= crit_energy)
+	if (mol.energy - mol.ALONG_EN <= mol.CRIT_EN)
 	{
 		direction(mol, field);
 		return 1;
@@ -308,26 +294,35 @@ bool movement(Molecule& mol, Field& field)
 
 	size_t x_max = field.get_size_x(), y_max = field.get_size_y();
 
+
+	//Координаты точки по направлению(вынесено, чтобы каждый раз не писать)
+	size_t _X = mol.x != 0 ? (mol.x + mol.dir[0]) % x_max : (x_max + mol.dir[0]) % x_max;
+	size_t _Y = mol.y != 0 ? (mol.y + mol.dir[1]) % y_max : (y_max + mol.dir[1]) % y_max;
+
 	//Случай, когда частица двигается вдоль осей:
 	//!!! % cord_max означает, что частица при переходе за поле автоматически перемещается нв другую его сторону
 	if ((abs(mol.dir[0]) == 1 && mol.dir[1] == 0) || (abs(mol.dir[1]) == 1 && mol.dir[0] == 0))
 	{
-		if (field[(mol.x + mol.dir[0]) % x_max][(mol.y + mol.dir[1]) % y_max][mol.z][0] == 0) //Если последующая ячейка свободна
+		if (field[_X][_Y][mol.z][0] == 0) //Если последующая ячейка свободна
 		{
 			//Случай, когда частица переходит строго вперёд
-			if (field[(mol.x + mol.dir[0]) % x_max][(mol.y + mol.dir[1]) % y_max][mol.z - 1][0] == 1)
+			if (field[_X][_Y][mol.z - 1][0] == 1)
 			{
 				//Проверка на возможность движения
-				if (mol.energy - mol.ALONG_EN <= crit_energy)
+				if (mol.energy - mol.ALONG_EN <= mol.CRIT_EN)
 				{
 					direction(mol, field);
 					return 1;
 				}
 
 				mol.along();
+
 				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
-				mol.x = mol.dir[0] != -1 ? (mol.x + mol.dir[0]) % x_max : x_max - 1;
-				mol.y = mol.dir[1] != -1 ? (mol.y + mol.dir[1]) % y_max : y_max - 1;
+
+				//Следующие координаты
+				mol.x = _X;
+				mol.y = _Y;
+
 				field[mol.x][mol.y][mol.z][0] = 1;
 				return 0;
 			}
@@ -335,16 +330,20 @@ bool movement(Molecule& mol, Field& field)
 			else
 			{
 				//Проверка на возможность движения
-				if (mol.energy - mol.FALLING_EN <= crit_energy)
+				if (mol.energy - mol.FALLING_EN <= mol.CRIT_EN)
 				{
 					direction(mol, field);
 					return 1;
 				}
 
 				mol.falling();
-				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из нвчальной координаты
-				mol.x = mol.dir[0] != -1 ? (mol.x + mol.dir[0]) % x_max : x_max - 1;
-				mol.y = mol.dir[1] != -1 ? (mol.y + mol.dir[1]) % y_max : y_max - 1;
+
+				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
+
+				//Следующие координаты
+				mol.x = _X;
+				mol.y = _Y;
+
 				//"Падение" частицы
 				while (field[(mol.x + mol.dir[0]) % x_max][(mol.y + mol.dir[1]) % y_max][mol.z - 1][0] == 0) --mol.z;
 				
@@ -356,22 +355,25 @@ bool movement(Molecule& mol, Field& field)
 		else
 		{
 			//Отражение
-			try
-			{
-				mol.dir[0] *= -1;
-				mol.dir[1] *= -1;
-				movement(mol, field);
-			}
-			catch (...) { return 0; }
+
+			//Проверка на возможность движения
+			if (mol.energy - mol.ALONG_EN <= mol.CRIT_EN)
+				{
+					direction(mol, field);
+					return 1;
+				}
+
+			mol.along();
+
+			mol.dir[0] *= -1;
+			mol.dir[1] *= -1;
+			movement(mol, field);
+
 
 		}
 	}
 }
 
-void cooxial_movement()
-{
-
-}
 
 //*****Функции класса Field***************************************************************
 
@@ -496,17 +498,6 @@ Molecule::Molecule(Field field)
 	z = field.get_size_z();
 
 
-	/*
-	//"Падение" молекулы
-	while (field[x][y][z - 1][0] == 0)
-	{
-		--z;
-
-		std::cout << " ->" << z;
-	}
-	//Установка молекулы в поле(для корректной работы "падения")
-	field.Field::change(x, y, z, 0, 1);
-	*/
 
 	int variants[3] = { 0, 1,-1 };
 
