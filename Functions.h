@@ -43,17 +43,18 @@ class Molecule
 public:
 	size_t x, y, z;
 	const double mass = 0;
-	const double charge = 0;
+	const double charge = 1;
 
 	double energy;
 	int dir[2]; //dir[0] <-> x, dir[1] <-> y
 	
-	double ALONG_EN = 1;
-	double ASCENT_EN = 3;
-	double FALLING_EN = 2;
+	//Энергия, которую частица теряет или получает при смене позиции
+	double ALONG_EN = 15;
+	double ASCENT_EN = 20;
+	double FALLING_EN = 5;
 
-	double MAX_ENERGY = 20;
-	double CRIT_EN = 1;
+	double MAX_ENERGY = 150;
+	double CRIT_EN = 15;
 	//Конструкторы
 	 Molecule();
 	~Molecule();
@@ -61,12 +62,22 @@ public:
 	Molecule(Field field);
 	Molecule(Field field, size_t _x, size_t _y, size_t _z, int dir0, int dir1);
 	
+	//Генератор молекул
+	void mol_generator(Field& field);
 	//выйгрыш энергии частицой при переходе на уровень вниз
 	void falling(size_t n = 1);
+	void falling(Field& field, size_t _x, size_t _y, size_t _z, size_t n);
+	double falling_check(Field& field, size_t _x, size_t _y, size_t _z, size_t n);
+
 	//Потеря энергии частицой при переходе на уровень вверх
 	void ascent(size_t n = 1);
+	void ascent(Field& field, size_t _x, size_t _y, size_t _z, size_t n);
+	double ascent_check(Field& field, size_t _x, size_t _y, size_t _z, size_t n);
+
 	//Потеря энергии при движении по оси
 	void along();
+	void along(Field& field, size_t _x, size_t _y, size_t _z);
+	double along_check(Field& field, size_t _x, size_t _y, size_t _z);
 };
 
 //Movements

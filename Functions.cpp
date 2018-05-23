@@ -314,12 +314,7 @@ bool movement(Molecule& mol, Field& field)
 	size_t _Y = mol.y != 0 ? (mol.y + mol.dir[1]) % y_max : (y_max + mol.dir[1]) % y_max;
 	size_t _Z = mol.z + 1;
 
-	//Проверка на возможность движения
-	if (mol.along_check(field, _X, _Y, mol.z) <= mol.CRIT_EN)
-	{
-		direction(mol, field);
-		return 1;
-	}
+
 
 	//Случай, когда частица двигается вдоль осей:
 	//!!! % cord_max означает, что частица при переходе за поле автоматически перемещается нв другую его сторону
@@ -330,12 +325,18 @@ bool movement(Molecule& mol, Field& field)
 			//Случай, когда частица переходит строго вперёд
 			if (field[_X][_Y][mol.z - 1][0] == 1)
 			{
-
-				//mol.along();
-				mol.along(field, _X, _Y, mol.z);
+				//Проверка на возможность движения
+				if (mol.along_check(field, _X, _Y, mol.z) <= mol.CRIT_EN)
+				{
+					direction(mol, field);
+					return 1;
+				}
 
 
 				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
+
+				//mol.along();
+				mol.along(field, _X, _Y, mol.z);
 
 				//Следующие координаты
 				mol.x = _X;
@@ -352,8 +353,9 @@ bool movement(Molecule& mol, Field& field)
 				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
 
 				size_t n = 0;
-				//"Падение" частицы
-				while (field[mol.x][mol.y][mol.z - 1][0] == 0) ++n;
+				size_t z0 = mol.z;
+				//"Падение" частицы(z0 для того, чтобы цикл не был бесконечным
+				while (field[mol.x][mol.y][z0 - 1][0] == 0) { --z0; ++n; }
 
 				mol.falling(field, _X, _Y, mol.z - n, n);
 
@@ -394,6 +396,8 @@ bool movement(Molecule& mol, Field& field)
 				}
 				
 				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
+
+				mol.ascent(field, _X, _Y, mol.z + n, n);
 
 				//Следующие координаты
 				mol.x = _X; 
