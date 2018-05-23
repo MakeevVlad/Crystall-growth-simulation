@@ -293,10 +293,10 @@ void along_movement(Molecule& mol, Field& field)
 //Эта функция отвечает за перемещение частицы
 bool movement(Molecule& mol, Field& field)
 {
-	std::cout << "c0 : " << mol.x << mol.y << mol.z << std::endl;
+	std::cout << std::endl << mol.x << " " << mol.y << " " << mol.z << " ";
 
-	if (mol.z == field.get_size_z())
-		//"Падение" молекулы
+	//"Падение" молекулы
+	if (mol.z == field.get_size_z()) 
 		while (field[mol.x][mol.y][mol.z - 1][0] == 0)
 		{
 			--mol.z;
@@ -306,22 +306,20 @@ bool movement(Molecule& mol, Field& field)
 	//Для случая, если частица совершает первое перемещение
 	field[mol.x][mol.y][mol.z][0] = 1;
 
-	//Энергия, обладая которой частица не может свободно двигаться
-	
-	//Проверка на возможность движения
-	if (mol.energy - mol.ALONG_EN <= mol.CRIT_EN)
-	{
-		direction(mol, field);
-		return 1;
-	}
 
 	size_t x_max = field.get_size_x(), y_max = field.get_size_y();
-
 
 	//Координаты точки по направлению(вынесено, чтобы каждый раз не писать)
 	size_t _X = mol.x != 0 ? (mol.x + mol.dir[0]) % x_max : (x_max + mol.dir[0]) % x_max;
 	size_t _Y = mol.y != 0 ? (mol.y + mol.dir[1]) % y_max : (y_max + mol.dir[1]) % y_max;
 	size_t _Z = mol.z + 1;
+
+	//Проверка на возможность движения
+	if (mol.along_check(field, _X, _Y, mol.z) <= mol.CRIT_EN)
+	{
+		direction(mol, field);
+		return 1;
+	}
 
 	//Случай, когда частица двигается вдоль осей:
 	//!!! % cord_max означает, что частица при переходе за поле автоматически перемещается нв другую его сторону
@@ -332,14 +330,10 @@ bool movement(Molecule& mol, Field& field)
 			//Случай, когда частица переходит строго вперёд
 			if (field[_X][_Y][mol.z - 1][0] == 1)
 			{
-				//Проверка на возможность движения
-				if (mol.energy - mol.ALONG_EN <= mol.CRIT_EN)
-				{
-					direction(mol, field);
-					return 1;
-				}
 
-				mol.along();
+				//mol.along();
+				mol.along(field, _X, _Y, mol.z);
+
 
 				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
 
@@ -353,16 +347,21 @@ bool movement(Molecule& mol, Field& field)
 			//Случай, когда частица переходит на уровень вниз
 			else
 			{
+				//mol.falling();
+				
 				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
+
+				size_t n = 0;
+				//"Падение" частицы
+				while (field[mol.x][mol.y][mol.z - 1][0] == 0) ++n;
+
+				mol.falling(field, _X, _Y, mol.z - n, n);
 
 				//Следующие координаты
 				mol.x = _X;
 				mol.y = _Y;
-
-				size_t n = 0;
-				//"Падение" частицы
-				while (field[mol.x][mol.y][mol.z - 1][0] == 0) { --mol.z;  ++n;}
-				mol.falling();
+				mol.z -= n;
+				
 				field[mol.x][mol.y][mol.z][0] = 1;
 				return 0;
 			}
@@ -388,7 +387,7 @@ bool movement(Molecule& mol, Field& field)
 			if( p <= p_ascent) //Подъём
 			{
 				//Проверка на возможность движения
-				if (mol.energy - n * mol.ASCENT_EN <= mol.CRIT_EN)
+				if (mol.ascent_check(field, _X, _Y, mol.z + n, n) <= mol.CRIT_EN)
 				{
 					direction(mol, field);
 					return 1;
@@ -418,7 +417,6 @@ bool movement(Molecule& mol, Field& field)
 				movement_reflection(mol, field);
 				movement(mol, field) == 1? 1 : 0;
 				
-
 			}	
 
 		}
@@ -584,15 +582,58 @@ void Molecule::falling(size_t n)
 {
 	energy += n*FALLING_EN;
 }
+
+void Molecule::falling(Field& field, size_t _x, size_t _y, size_t _z, size_t n)
+{
+	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];
+
+	energy -= (del_phi*charge -  n * FALLING_EN);
+}
+
+double Molecule::falling_check(Field& field, size_t _x, size_t _y, size_t _z, size_t n)
+{
+	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];
+
+	return energy - (del_phi*charge - n * FALLING_EN);
+}
+
 //Потеря энергии частицой при переходе на уровень вверх
 void Molecule::ascent(size_t n)
 {
 	energy -= n*ASCENT_EN;
 }
+
+void Molecule::ascent(Field& field, size_t _x, size_t _y, size_t _z, size_t n)
+{
+	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];
+
+	energy -= (n * ASCENT_EN - del_phi*charge);
+	
+}
+
+double Molecule::ascent_check(Field& field, size_t _x, size_t _y, size_t _z, size_t n)
+{
+	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];
+
+	return energy - (n * ASCENT_EN - del_phi * charge);
+}
+
 //Потеря энергии при движении по оси
 void Molecule::along()
 {
 	energy -= ALONG_EN;
 }
 
+void Molecule::along(Field& field, size_t _x, size_t _y, size_t _z)
+{
+	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];
 
+	energy -= (ALONG_EN - del_phi * charge);
+}
+
+double Molecule::along_check(Field& field, size_t _x, size_t _y, size_t _z)
+{
+	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];
+
+	return energy - (ALONG_EN - del_phi * charge);
+}
