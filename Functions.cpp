@@ -201,7 +201,7 @@ void direction(Molecule& mol, Field& field)
 	if(field[mol.x][mol.y][mol.z][0] == 1) std::cout << "OOO no " << std::endl;
 
 	field[mol.x][mol.y][mol.z][0] = 1;
-	field.lj_potencial();
+	//field.lj_potencial();
 	return;
 
 	//Выбор направления
@@ -325,12 +325,54 @@ bool movement(Molecule& mol, Field& field)
 			//Случай, когда частица переходит строго вперёд
 			if (field[_X][_Y][mol.z - 1][0] == 1)
 			{
+
+				field.lj_potencial(mol.x, mol.y, mol.z);
+
 				//Проверка на возможность движения
 				if (mol.along_check(field, _X, _Y, mol.z) <= mol.CRIT_EN)
 				{
 					direction(mol, field);
 					return 1;
 				}
+
+				double scnd_pot;
+
+				//Возможность перехода наискось
+				if (abs(mol.dir[0]) == 1 && (field[_X][(_Y + 1) % y_max][mol.z][0] == 0 || field[_X][_Y == 0 ? y_max - 1 : _Y - 1][mol.z][0] == 0))
+				{
+					if (field[_X][(_Y + 1) % y_max][mol.z][1] > field[_X][_Y == 0 ? y_max - 1 : _Y - 1][mol.z][1])
+					{
+						scnd_pot = field[_X][_Y == 0 ? y_max - 1 : _Y - 1][mol.z][1];
+						if(field[_X][_Y][mol.z][1] > scnd_pot && field[_X][_Y == 0 ? y_max - 1 : _Y - 1][mol.z - 1][0] == 1)
+							_Y = _Y == 0 ? y_max - 1 : _Y - 1;
+					}
+					else
+					{
+						scnd_pot = field[_X][(_Y + 1) % y_max][mol.z][1];
+						if (field[_X][_Y][mol.z][1] > scnd_pot && field[_X][(_Y + 1) % y_max][mol.z-1][0] == 1)
+							_Y = _Y == 0 ? y_max - 1 : _Y - 1;
+					}
+				}
+				else
+				{
+					if (field[(_X + 1) % x_max][_Y ][mol.z][0] == 1 || field[_X == 0 ? x_max - 1 : _X - 1][_Y][mol.z][0] == 1)
+					{
+						if (field[(_X + 1) % x_max][_Y][mol.z][1] > field[_X == 0 ? x_max - 1 : _X - 1][_Y][mol.z][1])
+						{
+							scnd_pot = field[_X == 0 ? x_max - 1 : _X - 1][_Y][mol.z][1];
+							if ((field[_X][_Y][mol.z][1] > scnd_pot) && field[_X == 0 ? x_max - 1 : _X - 1][_Y][mol.z - 1][0] == 1)
+								_X = _X == 0 ? x_max - 1 : _X - 1;
+						}
+						else
+						{
+							scnd_pot = field[(_X + 1) % x_max][_Y][mol.z][1];
+							if (field[_X][_Y][mol.z][1] > scnd_pot && field[_X == 0 ? x_max - 1 : _X - 1][_Y][mol.z - 1][0] == 1)
+								_X = (_X + 1) % x_max;
+						}
+
+					}
+				}
+
 
 
 				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
@@ -352,17 +394,19 @@ bool movement(Molecule& mol, Field& field)
 				
 				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
 
-				size_t n = 0;
+				int  n = 0;
 				size_t z0 = mol.z;
 				//"Падение" частицы(z0 для того, чтобы цикл не был бесконечным
-				while (field[mol.x][mol.y][z0 - 1][0] == 0) { --z0; ++n; }
+				while (field[mol.x][mol.y][z0 - 1][0] == 0) { --z0; --n; }
 
-				mol.falling(field, _X, _Y, mol.z - n, n);
+				field.lj_potencial(mol.x, mol.y, mol.z, n);
+
+				mol.falling(field, _X, _Y, mol.z + n, -1 * n);
 
 				//Следующие координаты
 				mol.x = _X;
 				mol.y = _Y;
-				mol.z -= n;
+				mol.z += n;
 				
 				field[mol.x][mol.y][mol.z][0] = 1;
 				return 0;
@@ -376,6 +420,7 @@ bool movement(Molecule& mol, Field& field)
 			size_t n = 1;
 			while (field[_X][_Y][_Z][0] == 1) {	++n; ++_Z;	}
 
+			field.lj_potencial(mol.x, mol.y, mol.z, n);
 
 			//Вероятности p_reflect - отражения and p_ascent - поднятия на уровень
 			double p_reflect = 1 / (1 + mol.ALONG_EN / (n * mol.ASCENT_EN));
@@ -510,28 +555,69 @@ void Field::potencial_uniform()
 //Задание потенциала по формуле Леннарда-Джонса
 void Field::lj_potencial()
 {
+
 	const double a1 = 1;
 	const double a2 = 1;
 
-	 for (double x = 0; x < size[0]; ++x)
-		 for (double y = 0; y < size[1]; ++y)
-			 for (double z = 0; z < size[2]; ++z)
-			 {
-				 for (double x1 = 0; x1 < size[0]; ++x1)
-					 for (double y1 = 0; y1 < size[1]; ++y1)
-						 for (double z1 = 0; z1 < size[2]; ++z1)
-						 {
-							 if (zone[size_t(x1)][size_t(y1)][size_t(z1)][0] == 1 && (x != x1 || y != y1 || z != z1))
-							 {
-								 double r = sqrt((x - x1)*(x - x1) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
-								 zone[size_t(x)][size_t(y)][size_t(z)][1] += (a1 / pow(r, 12)) - (a2 / pow(r, 6));
-							 }
-						 }
+	#pragma omp parallel for collapse(6)
+	for (double x = 0; x < size[0]; ++x)
+		for (double y = 0; y < size[1]; ++y)
+			for (double z = 0; z < size[2]; ++z)
+			{
+				for (double x1 = 0; x1 < size[0]; ++x1)
 
-			 }
-
+					for (double y1 = 0; y1 < size[1]; ++y1)
+						for (double z1 = 0; z1 < size[2]; ++z1)
+						{
+							if (zone[size_t(x1)][size_t(y1)][size_t(z1)][0] == 1 && (x != x1 || y != y1 || z != z1))
+							{
+								double r = sqrt((x - x1)*(x - x1) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
+								zone[size_t(x)][size_t(y)][size_t(z)][1] += (a1 / pow(r, 12)) - (a2 / pow(r, 6));
+							}
+						}
+			}
 }
+void Field::lj_potencial(size_t _x, size_t _y, size_t _z, int n)
+{
+	const double a1 = 1;
+	const double a2 = 1;
 
+	size_t x_start = _x != 0 ? _x - 1 : size[0] - 1,
+		y_start = _y != 0 ? _y - 1 : size[1] - 1;
+		
+
+	size_t x_end = ((_x + 1) % size[0]) + 1,
+		y_end = ((_y + 1) % size[1]) + 1;
+
+	size_t z_start, z_end;
+	if (n < 0) 
+	{
+		z_end = _z + 1; z_start = _z + n;
+	}
+	else
+	{
+		z_end = _z + n; z_start = _z - 1;
+	}
+			
+
+
+
+	for (double x = x_start; x < x_end; ++x)
+		for (double y = y_start; y < y_end; ++y)
+			for (double z = z_start; z < z_end; ++z)
+			{
+				for (double x1 = 0; x1 < size[0]; ++x1)
+					for (double y1 = 0; y1 < size[1]; ++y1)
+						for (double z1 = 0; z1 < size[2]; ++z1)
+						{
+							if (zone[size_t(x1)][size_t(y1)][size_t(z1)][0] == 1 && (x != x1 || y != y1 || z != z1))
+							{
+								double r = sqrt((x - x1)*(x - x1) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
+								zone[size_t(x)][size_t(y)][size_t(z)][1] += (a1 / pow(r, 12)) - (a2 / pow(r, 6));
+							}
+						}
+			}
+}
 
 
 
@@ -564,36 +650,62 @@ Molecule::Molecule(Field field)
 	energy = uniform(gen);
 
 }
-
 Molecule::Molecule(Field field, size_t _x, size_t _y, size_t _z, int dir0, int dir1)
 {
-	
-	dir[0] = -1;
-	dir[1] = 0;
+	x = _x;
+	y = _y;
+	z = _z;
+
+	dir[0] = dir0;
+	dir[1] = dir1;
 
 	energy = 350;
-
 }
-
 Molecule::~Molecule()
 {
 	delete &x, &y, &z, dir, &energy;
 }
 
+void Molecule::mol_generator(Field& field)
+{
+	std::srand(std::time(nullptr));
+	//Генератор случайных чисел(uniform distribution)
+	std::random_device rd;
+	std::mt19937 gen(rd());
+
+	std::uniform_real_distribution<> uniform_x(0, field.size[0]);
+	std::uniform_real_distribution<> uniform_y(0, field.size[1]);
+
+	x = uniform_x(gen);
+	y = uniform_y(gen);
+	z = field.get_size_z();
+
+
+
+	int variants[3] = { 0, 1,-1 };
+
+	//Выбор направления движения******Условный оператор нужен, чтобы нельзя было выбрать dir = {0, 0}
+	dir[0] = variants[rand() % 3];
+	dir[0] == 0 ? dir[1] = variants[rand() % 2 + 1] : dir[1] = 0;
+
+
+	std::uniform_real_distribution<> uniform(0, MAX_ENERGY);
+	energy = uniform(gen);
+
+	std::cout << std::endl << "****new molecule!**** /n energy =" << energy << std::endl;
+}
 
 //выйгрыш энергии частицой при переходе на уровень вниз
 void Molecule::falling(size_t n)
 {
 	energy += n*FALLING_EN;
 }
-
 void Molecule::falling(Field& field, size_t _x, size_t _y, size_t _z, size_t n)
 {
 	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];
 
 	energy -= (del_phi*charge -  n * FALLING_EN);
 }
-
 double Molecule::falling_check(Field& field, size_t _x, size_t _y, size_t _z, size_t n)
 {
 	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];
@@ -606,7 +718,6 @@ void Molecule::ascent(size_t n)
 {
 	energy -= n*ASCENT_EN;
 }
-
 void Molecule::ascent(Field& field, size_t _x, size_t _y, size_t _z, size_t n)
 {
 	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];
@@ -614,7 +725,6 @@ void Molecule::ascent(Field& field, size_t _x, size_t _y, size_t _z, size_t n)
 	energy -= (n * ASCENT_EN - del_phi*charge);
 	
 }
-
 double Molecule::ascent_check(Field& field, size_t _x, size_t _y, size_t _z, size_t n)
 {
 	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];
@@ -627,14 +737,12 @@ void Molecule::along()
 {
 	energy -= ALONG_EN;
 }
-
 void Molecule::along(Field& field, size_t _x, size_t _y, size_t _z)
 {
 	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];
 
 	energy -= (ALONG_EN - del_phi * charge);
 }
-
 double Molecule::along_check(Field& field, size_t _x, size_t _y, size_t _z)
 {
 	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];

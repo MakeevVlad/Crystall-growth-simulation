@@ -31,6 +31,7 @@ public:
 	//Задаёт карту потенциала
 	void potencial_uniform();
 	void lj_potencial();
+	void lj_potencial(size_t _x, size_t _y, size_t _z, int n = 1);
 
 	//Взятие индекса
 	std::vector<std::vector<std::vector<double>>>& operator[](size_t i);
@@ -49,11 +50,11 @@ public:
 	int dir[2]; //dir[0] <-> x, dir[1] <-> y
 	
 	//Энергия, которую частица теряет или получает при смене позиции
-	double ALONG_EN = 15;
-	double ASCENT_EN = 20;
-	double FALLING_EN = 5;
+	double ALONG_EN = 25;
+	double ASCENT_EN = 40;
+	double FALLING_EN = 10;
 
-	double MAX_ENERGY = 150;
+	double MAX_ENERGY = 200;
 	double CRIT_EN = 15;
 	//Конструкторы
 	 Molecule();
@@ -64,6 +65,9 @@ public:
 	
 	//Генератор молекул
 	void mol_generator(Field& field);
+
+
+
 	//выйгрыш энергии частицой при переходе на уровень вниз
 	void falling(size_t n = 1);
 	void falling(Field& field, size_t _x, size_t _y, size_t _z, size_t n);
