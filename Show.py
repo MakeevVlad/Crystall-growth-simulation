@@ -5,13 +5,13 @@ from scipy.interpolate import interp1d
 
 fig = plt.figure()
 gp = fig.add_subplot(111, projection='3d')
-gp.set_xlabel('Phi')
-gp.set_ylabel('cos(Theta)')
-gp.set_title('Efficiency')
+gp.set_xlabel('X')
+gp.set_ylabel('Y')
+gp.set_title('Z')
 
-x = []  #PHI
-y = []	#TETA
-z = []	#EFF
+x = []  
+y = []	
+z = []	
 pot = []
 
 
