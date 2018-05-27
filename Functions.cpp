@@ -576,8 +576,8 @@ void Field::lj_potencial()
 	const double a1 = 1;
 	const double a2 = 1;
 
-
-	for (double x = 0; x < size[0]; ++x)
+#pragma omp parallel for
+	for (int x = 0; x < size[0]; ++x)
 		for (double y = 0; y < size[1]; ++y)
 			for (double z = 0; z < size[2]; ++z)
 			{
@@ -588,7 +588,7 @@ void Field::lj_potencial()
 						{
 							if (zone[size_t(x1)][size_t(y1)][size_t(z1)][0] == 1 && (x != x1 || y != y1 || z != z1))
 							{
-								double r = sqrt((x - x1)*(x - x1) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
+								double r = sqrt((double(x) - x1)*(double(x) - x1) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
 								zone[size_t(x)][size_t(y)][size_t(z)][1] += (a1 / pow(r, 12)) - (a2 / pow(r, 6));
 							}
 						}
@@ -618,8 +618,8 @@ void Field::lj_potencial(size_t _x, size_t _y, size_t _z, int n)
 			
 
 
-
-	for (double x = x_start; x < x_end; ++x)
+#pragma omp parallel for
+	for (int x = x_start; x < x_end; ++x)
 		for (double y = y_start; y < y_end; ++y)
 			for (double z = z_start; z < z_end; ++z)
 			{
@@ -629,7 +629,7 @@ void Field::lj_potencial(size_t _x, size_t _y, size_t _z, int n)
 						{
 							if (zone[size_t(x1)][size_t(y1)][size_t(z1)][0] == 1 && (x != x1 || y != y1 || z != z1))
 							{
-								double r = sqrt((x - x1)*(x - x1) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
+								double r = sqrt((double(x) - x1)*(double(x) - x1) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
 								zone[size_t(x)][size_t(y)][size_t(z)][1] += (a1 / pow(r, 12)) - (a2 / pow(r, 6));
 							}
 						}
