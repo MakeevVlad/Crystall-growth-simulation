@@ -54,7 +54,7 @@ public:
 	double ASCENT_EN = 40;
 	double FALLING_EN = 10;
 
-	double MAX_ENERGY = 200;
+	double MAX_ENERGY = 400;
 	double CRIT_EN = 15;
 	//Конструкторы
 	 Molecule();

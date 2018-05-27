@@ -5,6 +5,7 @@
 #include <ctime>
 #include <random>
 #include <fstream>
+#include <omp.h>
 
 #include "Functions.h"
 
@@ -20,7 +21,24 @@ void collect_data(Field& field)
 					file << x << " " << y << " " << z << " " << field[x][y][z][1] << std::endl;
 	file.close();
 }
+//В файл записывается только координата верхней молекулы
+void smart_data_collect(Field& field)
+{
+	std::ofstream file("crystal.txt", std::ios::out);
 
+	for (double x = -1; x <= field.size[0]; ++x)
+		for (double y = -1; y <= field.size[1]; ++y)
+			for (double z = 0; z < field.size[2]; ++z)
+			{
+				if (x == -1 || y == -1 || x == field.size[0] || y == field.size[1])
+				{
+					file << x << " " << y << " " << 0 << " " << 0 << std::endl;
+					continue;
+				}
+				if (field[x][y][z][0] == 1 && field[x][y][z + 1][0] == 0)
+					file << x << " " << y << " " << z << " " << field[x][y][z][1] << std::endl;
+			}
+}
 
 //*****Фунции движения********************************************************************
 
@@ -267,7 +285,6 @@ void direction(Molecule& mol, Field& field)
 	*/
 }
 
-
 //Функция отвечающая за отражение частицы
 void movement_reflection(Molecule& mol, Field& field)
 {
@@ -284,7 +301,7 @@ void movement_ascent(Molecule& mol, Field& field)
 
 }
 //Функция отвечающая за кооксиальное движение
-void along_movement(Molecule& mol, Field& field)
+void movement_along(Molecule& mol, Field& field)
 {
 
 }
@@ -500,7 +517,7 @@ Field::Field(size_t len, size_t wid, size_t hei)
 		}
 	}
 	//Задание начальной карты потенциала
-	this->lj_potencial();
+	//this->lj_potencial();
 }
 
 void Field::set_size(size_t len, size_t wid, size_t hei)
@@ -559,7 +576,7 @@ void Field::lj_potencial()
 	const double a1 = 1;
 	const double a2 = 1;
 
-	#pragma omp parallel for collapse(6)
+
 	for (double x = 0; x < size[0]; ++x)
 		for (double y = 0; y < size[1]; ++y)
 			for (double z = 0; z < size[2]; ++z)
