@@ -2,67 +2,78 @@
 #include <iostream>
 #include <ctime>
 #include <random>
+#include <omp.h>
+#include <fstream>
+
 #include "Functions.h"
 
 bool movement(Molecule& mol, Field& field);
 void direction(Molecule& mol, Field& field);
 void collect_data(Field& field);
-
+void smart_data_collect(Field& field);
 
 int main()
 {
 
 
 
+
+
+
 	Field field(10, 10, 10);
 
 	
-	Molecule mol[121] = { Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-						Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-		Molecule(field), Molecule(field), Molecule(field), Molecule(field), Molecule(field),
-						Molecule(field)};
- 
-	
-	Field field1(10, 10, 10);
 
+	Field field1(40, 40, 20);
+
+	std::ifstream file("crystal.txt", std::ios::in);
+
+	size_t x, y, z;
+	double p;
+
+	for (size_t i = 0; i < 4000; ++i)
+	{
+		std::cout << i;
+		file >> x >> y >> z >> p;
+
+		field1[x][y][z][0] = 1;
+		field1[x][y][z][1] = p;
+
+	}
+	file.close();
+
+	smart_data_collect(field1);
+
+
+
+
+
+
+
+
+
+
+	Molecule mol(field);
+	
 	size_t i = 0;
 
-	for (int j = 0; j < 121 ; ++j)
+	for (int j = 0; j < 100; ++j)
 	{
+		std::cout << std::endl << j << ") ";
 		do
 		{
-			i = movement(mol[j], field1);
+			i = movement(mol, field1);
 
 		} while (i == 0);
 
 		i = 0;
-
+		mol.mol_generator(field);
 
 	}
-
-
-	collect_data(field1);
+	
+	
+	//collect_data(field1);
+	smart_data_collect(field1);
 	system("show.py");
 	system("pause");
 }
