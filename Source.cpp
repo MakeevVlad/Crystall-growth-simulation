@@ -14,44 +14,7 @@ void smart_data_collect(Field& field);
 
 int main()
 {
-
-
-
-
-
-
-	Field field(10, 10, 10);
-
-	
-
-	Field field1(40, 40, 20);
-
-	std::ifstream file("crystal.txt", std::ios::in);
-
-	size_t x, y, z;
-	double p;
-
-	for (size_t i = 0; i < 4000; ++i)
-	{
-		std::cout << i;
-		file >> x >> y >> z >> p;
-
-		field1[x][y][z][0] = 1;
-		field1[x][y][z][1] = p;
-
-	}
-	file.close();
-
-	smart_data_collect(field1);
-
-
-
-
-
-
-
-
-
+	Field field(10, 10, 20);
 
 	Molecule mol(field);
 	
@@ -62,7 +25,7 @@ int main()
 		std::cout << std::endl << j << ") ";
 		do
 		{
-			i = movement(mol, field1);
+			i = movement(mol, field);
 
 		} while (i == 0);
 
@@ -73,8 +36,43 @@ int main()
 	
 	
 	//collect_data(field1);
-	smart_data_collect(field1);
+	smart_data_collect(field);
 	system("show.py");
 	system("pause");
 }
 
+
+
+//Перевод из data в smart_data
+void transcription(Field& field)
+{
+	std::ifstream file("crystal.txt", std::ios::in);
+
+	size_t x, y, z;
+	double p;
+
+	for (size_t i = 0; i < 4000; ++i)
+	{
+		std::cout << i;
+		file >> x >> y >> z >> p;
+
+		field[x][y][z][0] = 1;
+		field[x][y][z][1] = p;
+
+	}
+	file.close();
+
+	smart_data_collect(field);
+}
+
+
+/*
+int main()
+{
+	Field field(10, 10, 20);
+
+	field.lj_potencial();
+
+	system("pause");
+
+}*/
