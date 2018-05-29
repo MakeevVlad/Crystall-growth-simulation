@@ -1,15 +1,17 @@
 from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
+from mpl_toolkits.mplot3d import proj3d
 import matplotlib.pyplot as plt
-from scipy.interpolate import interp1d
 import matplotlib.ticker
-
+import numpy as np
 
 fig = plt.figure()
-gp = fig.add_subplot(111, projection='3d')
-gp.set_xlabel('X')
-gp.set_ylabel('Y')
-gp.set_title('Z')
+fg = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+gp = fg.add_subplot(111, projection='3d')
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+
 
 x = []  #PHI
 y = []	#TETA
@@ -26,11 +28,15 @@ for line in f:
 	z.append(nums[2])
 	pot.append(np.abs(nums[3]))
 
+xa = [0, 40]
+ya = [0, 40]
+za = [40, 40]
 
-#bottom = np.zeros_like(z)
-#width = depth = 1
-#gp.bar3d(x, y, bottom, width, depth, z)
 
-gp.plot_trisurf(x, y, z)
-
+bottom = np.zeros_like(z)
+width = depth = 1
+gp.bar3d(x, y, bottom, width, depth, z)
+#gp.scatter(xa, ya, za)
+ax.plot_trisurf(x, y, z)
+#ax.scatter(xa, ya, za)
 plt.show()

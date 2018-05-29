@@ -35,7 +35,7 @@ void smart_data_collect(Field& field)
 					file << x << " " << y << " " << 0 << " " << 0 << std::endl;
 					continue;
 				}
-				if (field[x][y][z][0] == 1 && field[x][y][z + 1][0] == 0)
+				if (field[x][y][z][0] == 1 && (z == field.get_size_z()? 0 :  field[x][y][z + 1][0] == 0))
 					file << x << " " << y << " " << z << " " << field[x][y][z][1] << std::endl;
 			}
 }
@@ -576,19 +576,19 @@ void Field::lj_potencial()
 	const double a1 = 1;
 	const double a2 = 1;
 
-#pragma omp parallel for
+#pragma omp parallel for ordered schedule(dynamic)
 	for (int x = 0; x < size[0]; ++x)
 		for (double y = 0; y < size[1]; ++y)
 			for (double z = 0; z < size[2]; ++z)
 			{
-				for (double x1 = 0; x1 < size[0]; ++x1)
-
+				#pragma omp parallel for ordered schedule(dynamic)
+				for (int x1 = 0; x1 < size[0]; ++x1)
 					for (double y1 = 0; y1 < size[1]; ++y1)
 						for (double z1 = 0; z1 < size[2]; ++z1)
 						{
 							if (zone[size_t(x1)][size_t(y1)][size_t(z1)][0] == 1 && (x != x1 || y != y1 || z != z1))
 							{
-								double r = sqrt((double(x) - x1)*(double(x) - x1) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
+								double r = sqrt((double(x) - double(x1))*(double(x) - double(x1)) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
 								zone[size_t(x)][size_t(y)][size_t(z)][1] += (a1 / pow(r, 12)) - (a2 / pow(r, 6));
 							}
 						}
@@ -618,18 +618,19 @@ void Field::lj_potencial(size_t _x, size_t _y, size_t _z, int n)
 			
 
 
-#pragma omp parallel for
+#pragma omp parallel for ordered schedule(dynamic)
 	for (int x = x_start; x < x_end; ++x)
 		for (double y = y_start; y < y_end; ++y)
 			for (double z = z_start; z < z_end; ++z)
 			{
-				for (double x1 = 0; x1 < size[0]; ++x1)
+				#pragma omp parallel for ordered schedule(dynamic)
+				for (int x1 = 0; x1 < size[0]; ++x1)
 					for (double y1 = 0; y1 < size[1]; ++y1)
 						for (double z1 = 0; z1 < size[2]; ++z1)
 						{
 							if (zone[size_t(x1)][size_t(y1)][size_t(z1)][0] == 1 && (x != x1 || y != y1 || z != z1))
 							{
-								double r = sqrt((double(x) - x1)*(double(x) - x1) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
+								double r = sqrt((double(x) - double(x1))*(double(x) - double(x1)) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
 								zone[size_t(x)][size_t(y)][size_t(z)][1] += (a1 / pow(r, 12)) - (a2 / pow(r, 6));
 							}
 						}

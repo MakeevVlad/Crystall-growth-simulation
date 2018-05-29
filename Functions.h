@@ -33,6 +33,9 @@ public:
 	void lj_potencial();
 	void lj_potencial(size_t _x, size_t _y, size_t _z, int n = 1);
 
+	//Поиск минимального потенциала по всему полю
+	std::vector<double>& min();
+
 	//Взятие индекса
 	std::vector<std::vector<std::vector<double>>>& operator[](size_t i);
 
@@ -50,8 +53,8 @@ public:
 	int dir[2]; //dir[0] <-> x, dir[1] <-> y
 	
 	//Энергия, которую частица теряет или получает при смене позиции
-	double ALONG_EN = 25;
-	double ASCENT_EN = 40;
+	double ALONG_EN = 10;
+	double ASCENT_EN = 150;
 	double FALLING_EN = 10;
 
 	double MAX_ENERGY = 400;
@@ -65,9 +68,7 @@ public:
 	
 	//Генератор молекул
 	void mol_generator(Field& field);
-	
-	//Поиск минимального потенциала по всему полю
-	std::vector<double>& min();
+
 
 	//выйгрыш энергии частицой при переходе на уровень вниз
 	void falling(size_t n = 1);
