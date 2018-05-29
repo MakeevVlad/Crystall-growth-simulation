@@ -65,8 +65,9 @@ public:
 	
 	//Генератор молекул
 	void mol_generator(Field& field);
-
-
+	
+	//Поиск минимального потенциала по всему полю
+	std::vector<double>& min();
 
 	//выйгрыш энергии частицой при переходе на уровень вниз
 	void falling(size_t n = 1);
