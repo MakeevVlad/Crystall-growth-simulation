@@ -31,16 +31,17 @@ void advanced_movement(Field& field, size_t mol_quantity)
   
   std::ofstream file("mol_paths_adv.txt", std::ios::in)
   std::vector<double> min;
-  min.resize(4)
+  min.resize(4);
   for (size_t mol = 0; mol< mol_quantity; ++mol)
   {
-    field.lj_potencial();
-    min = field.min();
+   	field.lj_potencial();
+    	min = field.min();
+    	field[min[0]][min[1]][min[2]][0] = 1;
     
-    field[min[0]][min[1]][min[2]][0] = 1;
-    
-    file << i << min[0] << min[1] << min[2] << min[3];
+	file << i << min[0] << min[1] << min[2] << min[3];
   }
+  file.close();
+	
 }
                
        
