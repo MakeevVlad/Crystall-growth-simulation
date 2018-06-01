@@ -1,8 +1,10 @@
 #include <iostream>
 #include <vector>
 #include <omp.h>
-#include "Functions.h"
 #include <fstream>
+
+#include "Functions.h"
+
 
 //В кристалле ищется свободная точка с наименьшим потенциалом
 std::vector<double>& Field::min()
@@ -53,13 +55,12 @@ void advanced_movement(Field& field, size_t mol_quantity)
 
 
 		field[min[0]][min[1]][min[2]][0] = 1;
-		std::cout << mol << std::endl;
-    
+		std::cout << mol << ") "<< min[0] << " " << min[1] << " " << min[2] << " " << min[3] << std::endl;
+   
 		file << mol << min[0] << min[1] << min[2] << min[3];
 	}
 
 	file.close();
-	
 }
                
        

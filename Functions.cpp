@@ -10,6 +10,7 @@
 #include "Functions.h"
 
 
+//Функция, сохраняющая данные в файл для дальнейшей отрисовки
 void collect_data(Field& field)
 {
 	std::ofstream file("crystal.txt", std::ios::out);
@@ -38,6 +39,31 @@ void smart_data_collect(Field& field)
 				if (field[x][y][z][0] == 1 && (z == field.get_size_z()? 0 :  field[x][y][z + 1][0] == 0))
 					file << x << " " << y << " " << z << " " << field[x][y][z][1] << std::endl;
 			}
+}
+//Задаются параметры сборки
+void set_configuration(Field& field, Molecule& mol)
+{
+	std::cout << "\n-------------------------------------------------------------\n";
+	std::cout << "Enter cooficients for L-J formula (Default is a1 = 1, a2 = 1) \n";
+	std::cin >> field.a1 >> field.a2;
+			
+	std::cout << "Enter ALONG_EN, ASCENT_EN, FALLING_EN (defaults = {10, 150, 10}) \n";
+	std::cin >> mol.ALONG_EN >> mol.ASCENT_EN >> mol.FALLING_EN;
+
+	std::cout << "Enter MAX_ENERGY and CRIT_ENERGY (defaults = {400, 15})\n ";
+	std::cin >> mol.MAX_ENERGY >> mol.CRIT_EN;
+	std::cout << "\n-------------------------------------------------------------\n";
+
+}
+
+//Выбор режима запуска программы
+size_t set_mode()
+{
+	size_t val;
+	std::cout << "\n---------------------------\n";
+	std::cout << "Choose mode you want to use: \n1 - standart simulation \n2 - 'min-pot' mode \n";
+	std::cin >> val;
+	return val;
 }
 
 //*****Фунции движения********************************************************************
@@ -138,65 +164,11 @@ void direction(Molecule& mol, Field& field)
 		}
 	}
 
-	//Случай, когда частица двигается по диагонали
+	//Случай, когда частица двигается по диагонали (движение по диагонали напрямую не реализована в этой версии)
 	else
 	{
 		return;
 	}
-
-	/*
-	size_t pot_size = pot.size();
-	//Массив с вероятностями
-	std::vector<double> p(pot_size + 1);
-	*/
-
-
-	//Эти два цикла отвечают за создание вектора вероятностей НЕприсоединения; если pot = 1000, то ничего не присоединиться
-	/*
-	for (size_t i = 0; i < pot.size();++i)
-	{
-		if (pot[i][0] == 10000) continue;
-		p[pot.size()] += pot[i][0];
-
-	}
-	for (size_t i = 0; i < pot.size(); ++i)
-	{
-		if (pot[i][0] == 10000) { p[i] = 1; continue; }
-		//Вероятность присоединения в соответствующую точку
-		p[i] = 1 - ( pot[i][0] / p[pot.size()] );
-	}
-
-	
-
-	//Внимание КАСТЫЛЬ!!! НЕОБХОДИМО БУДЕТ ИСПРАВИТЬ(тут сортируется только один вектор, а координаты впоследствии выравниваются исходя из равенства вероятностей)
-	for (size_t i = 0; i < pot.size(); pot[i][0] = p[i], ++i);
-	std::sort(p.begin(), p.end());
-
-	for (size_t i = 0; i < pot.size(); ++i)
-		for (size_t j = 0; j < pot.size(); ++j)
-		{
-			if (pot[i][0] == p[j])
-				for (size_t c = 0; c <= 3; ++c)
-					std::swap(pot[j][c], pot[i][c]);
-		}
-	//Конец костыля________УБРАТЬ!!!!! Необходимо написать функцию нормальной сортировки
-
-	*/
-
-
-	/*
-	//Для поиска максимумального и минимального потенциалов
-	double pot_max[2]{ 0, 0 };//0 - значение, 1 - номер
-	double pot_min[2]{ 1, 0 };//0 - значение, 1 - номер
-
-	for (size_t i = 0; i < pot.size(); ++i)
-	{
-		//Поиск максимальной вероятности
-		if (p[i] > pot_max[0] && p[i] != 1) { pot_max[0] = p[i]; pot_max[1] = i; };
-		//Поиск минимальной вероятности
-		if (p[i] < pot_min[0]) { pot_min[0] = p[i]; pot_min[1] = i; };
-	}
-	*/
 
 	//Для простоты модели просто выбирается минимальный потенциал
 	size_t num = 10;
@@ -222,67 +194,6 @@ void direction(Molecule& mol, Field& field)
 	//field.lj_potencial();
 	return;
 
-	//Выбор направления
-/*
-	try
-	{
-	double p_r;
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	if (pot_max[0] == 0)
-		p_r = 1000;
-	else
-	{
-		std::uniform_real_distribution<> uniform(size_t((pot_min[0] - 0.01) * 10000), size_t((pot_max[0] + 0.01) * 10000));
-		p_r = uniform(gen);
-	}
-	p_r /= 10000;
-
-
-
-		if (p_r >= pot_max[0] && p_r < 1)
-		{
-			field[mol.x][mol.y][mol.z][0] = 0;
-			//Изменение координат частицы
-			mol.x = size_t(pot[pot_min[1]][1]);
-			mol.y = size_t(pot[pot_min[1]][2]);
-			mol.z = size_t(pot[pot_min[1]][3]);
-			field[size_t(pot[pot_max[1]][1])][size_t(pot[pot_max[1]][2])][size_t(pot[pot_max[1]][3])][0] = 1;
-			//Для отладки
-			std::cout << pot_max[0] << " " << p_r << " 1" << std::endl;
-			return;
-		}
-
-		if (p_r <= pot_min[0])
-		{
-			field[mol.x][mol.y][mol.z][0] = 0;
-			//Изменение координат частицы
-			mol.x = size_t(pot[pot_min[1]][1]);
-			mol.y = size_t(pot[pot_min[1]][2]);
-			mol.z = size_t(pot[pot_min[1]][3]);
-			field[size_t(pot[pot_min[1]][1])][size_t(pot[pot_min[1]][2])][size_t(pot[pot_min[1]][3])][0] = 1;
-			//Для отладки
-			std::cout << pot_min[0] << " " << p_r << " 2" << std::endl;
-			return;
-		}
-
-		else
-			for (size_t j = 0; j < p.size() - 1; ++j)
-				if (p_r > p[j] && p_r <= p[j + 1] && p[j] != 1)
-				{
-					field[mol.x][mol.y][mol.z][0] = 0;
-					mol.x = size_t(pot[j + 1][1]);
-					mol.y = size_t(pot[j + 1][2]);
-					mol.z = size_t(pot[j + 1][3]);
-
-					field[size_t(pot[j + 1][1])][size_t(pot[j + 1][2])][size_t(pot[j + 1][3])][0] = 1;
-					//Для отладки
-					std::cout << p[j + 1] << " " << p_r << " 3" << std::endl;
-					return;
-				}
-	}
-	catch (...) { return; }
-	*/
 }
 
 //Функция отвечающая за отражение частицы
@@ -295,15 +206,12 @@ void movement_reflection(Molecule& mol, Field& field)
 //Функция отвечающая за восхождение :)
 void movement_ascent(Molecule& mol, Field& field)
 {
-
-
-
-
+	//Реализация пока что в основном коде
 }
 //Функция отвечающая за кооксиальное движение
 void movement_along(Molecule& mol, Field& field)
 {
-
+	//Реализация пока что в основном коде
 }
 
 
@@ -354,7 +262,7 @@ bool movement(Molecule& mol, Field& field)
 
 				double scnd_pot;
 
-				//Возможность перехода наискось
+				//Возможность перехода наискось (В этом ужасном фрагменте кода происходит проверка соседних ячеек поля, на возможность присоединения в них)
 				if (abs(mol.dir[0]) == 1 && (field[_X][(_Y + 1) % y_max][mol.z][0] == 0 || field[_X][_Y == 0 ? y_max - 1 : _Y - 1][mol.z][0] == 0))
 				{
 					if (field[_X][(_Y + 1) % y_max][mol.z][1] > field[_X][_Y == 0 ? y_max - 1 : _Y - 1][mol.z][1])
@@ -391,10 +299,10 @@ bool movement(Molecule& mol, Field& field)
 				}
 
 
+				//Убираем молекулу из начальной координаты
+				field[mol.x][mol.y][mol.z][0] = 0; 
 
-				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
-
-				//mol.along();
+				//Изменяем энергию молекулы
 				mol.along(field, _X, _Y, mol.z);
 
 				//Следующие координаты
@@ -552,8 +460,6 @@ std::vector<std::vector<std::vector<double>>>& Field::operator[](size_t i)
 }
 
 
-
-
 //Задание рандомных потенциалов
 void Field::potencial_uniform()
 {
@@ -572,10 +478,6 @@ void Field::potencial_uniform()
 //Задание потенциала по формуле Леннарда-Джонса
 void Field::lj_potencial()
 {
-
-	const double a1 = 1;
-	const double a2 = 1;
-
 #pragma omp parallel for ordered schedule(dynamic)
 	for (int x = 0; x < size[0]; ++x)
 		for (double y = 0; y < size[1]; ++y)
@@ -593,30 +495,24 @@ void Field::lj_potencial()
 							}
 						}
 			}
+
 }
+//Упрощенный вариант (потенциал пересчитывается только в ячейках, подходящих для перемщения)
 void Field::lj_potencial(size_t _x, size_t _y, size_t _z, int n)
 {
-	const double a1 = 1;
-	const double a2 = 1;
 
 	size_t x_start = _x != 0 ? _x - 1 : size[0] - 1,
 		y_start = _y != 0 ? _y - 1 : size[1] - 1;
 		
-
 	size_t x_end = ((_x + 1) % size[0]) + 1,
 		y_end = ((_y + 1) % size[1]) + 1;
 
 	size_t z_start, z_end;
-	if (n < 0) 
-	{
-		z_end = _z + 1; z_start = _z + n;
-	}
-	else
-	{
-		z_end = _z + n; z_start = _z - 1;
-	}
-			
 
+	if (n < 0) { z_end = _z + 1; z_start = _z + n; }
+	
+	else { z_end = _z + n; z_start = _z - 1; }
+		
 
 #pragma omp parallel for ordered schedule(dynamic)
 	for (int x = x_start; x < x_end; ++x)

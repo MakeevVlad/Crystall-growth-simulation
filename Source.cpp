@@ -12,110 +12,92 @@ void direction(Molecule& mol, Field& field);
 void collect_data(Field& field);
 void smart_data_collect(Field& field);
 void advanced_movement(Field& field, size_t mol_quantity);
+void set_configuration(Field& field, Molecule& mol);
+size_t set_mode();
 
 int main()
 {
+
+	std::cout << "============================================================\n" <<
+				 "You are welcomed by Crystal growth simulator\n" <<
+				 "made by MCL 1303 student (C)Makeev Vladislav for summer exam\n" <<
+				 "============================================================\n";
+
 	size_t x, y, z;
 	size_t num;
+	char var;
 
-	char val;
-
-
-	/*
-	std::cout << "Do you wand to change field size?(Y, N) (default = {x: 10, y: 10, z: 10})" << std::endl;
-	std::cin >> val;
-	std::cout << "Enter values(x, y, z)" << std::endl;
-	switch (val)
-	{
-		case 'Y': 
-			std::cin >> x >> y >> z;
-			val = 'NULL';
-			break;
-
-		case 'N':
-			x = 10;
-			y = 10;
-			z = 10;
-			val = 'NULL';
-			break;
-
-		default:
-			std::cout << "You've entered wrong value, setting up defaults!!!" << std::endl;
-			x = 10;
-			y = 10;
-			z = 10;
-			val = 'NULL';
-			break;
-	}
-	std::cout << "Choose molecules quantity" << std::endl;
-	std::cin >> val;
-	try
-	{
-		num = size_t(val);
-	}
-	catch (...)
-	{
-		std::cout << "You've entered wrong value, setting up defaults!!! num = 500" << std::endl;
-		num = 500;
-	}
+	std::cout << "--------------------------\n" <<
+				 "Enter molecules quantity: ";
+	std::cin >> num;
+	std::cout << "\n-----------------------------" <<
+				 "\nEnter field size (x, y, z): ";
+	std::cin >> x >> y >> z;
 
 	Field field(x, y, z);
 	Molecule mol(field);
 
+	std::cout << "\n------------------------------------------------------------\n";
+	std::cout << "Default simulation configuration: \n\na1 = " << field.a1 << " a2 = " << field.a2 << std::endl;
+	std::cout << "ALONG_EN = " << mol.ALONG_EN << " ASCENT_EN = " << mol.ASCENT_EN
+		<< " FALLING_EN = " << mol.FALLING_EN << "\nMAX_ENERGY = "
+		<< mol.MAX_ENERGY << " CRIT_EN = " << mol.CRIT_EN << std::endl;
+	std::cout << "\n------------------------------------------------------------\n";
+	std::cout << "Do you want to change simulation configuration? y, n\n";
+	std::cin >> var;
+	switch (var)
+	{
+	case 'y':
+		set_configuration(field, mol);
+		std::cout << "\n-------------------------------------------------------------\n";
+		std::cout << "New configuration: \n\na1 = " << field.a1 << " a2 = " << field.a2 << std::endl;
+		std::cout << "ALONG_EN = " << mol.ALONG_EN << " ASCENT_EN = " << mol.ASCENT_EN
+			<< " FALLING_EN = " << mol.FALLING_EN << "\nMAX_ENERGY = "
+			<< mol.MAX_ENERGY << " CRIT_EN = " << mol.CRIT_EN << std::endl;
+		std::cout << "\n-------------------------------------------------------------\n";
+		break;
+	}
+
+
+	size_t val = set_mode();
 	size_t i = 0;
-	std::cout << "Choose mode: 1) Simulation; 2)'Min-pot crystal' " << std::endl;
-	std::cin >> val;
 	switch (val)
 	{
-		case '1':
-			for (int j = 0; j < 500; ++j)
-			{
-				std::cout << std::endl << j << ") ";
-				do
-				{
-					i = movement(mol, field);
-
-				} while (i == 0);
-
-				i = 0;
-				mol.mol_generator(field);
-
-			}
-			break;
-
-		case '2':	
-			advanced_movement(field, num);
-			break;
-
-		default: 
-			std::cout << "You've entered wrong value, running Min-pot" << std::endl;
-			advanced_movement(field, num);
-			break;
-
-	}
-
-	*/
-
-	size_t i = 0;
-	for (int j = 0; j < 500; ++j)
-	{
-		std::cout << std::endl << j << ") ";
-		do
+	case 1:
+		for (int j = 0; j < num; ++j)
 		{
-			i = movement(mol, field);
+			std::cout << std::endl << j << ") ";
+			do
+			{
+				i = movement(mol, field);
 
-		} while (i == 0);
+			} while (i == 0);
 
-		i = 0;
-		mol.mol_generator(field);
+			i = 0;
+			mol.mol_generator(field);
+		}
+		break;
 
+	case 2:
+		advanced_movement(field, num);
+		break;
 	}
-
-	//advanced_movement(field, 500);
 
 
 	smart_data_collect(field);
 	system("show.py");
+
+	std::cout << "______________________________\n" <<
+				 "Do you want to try again? y, n\n";
+	std::cin >> var;
+	switch (var)
+	{
+	case 'y':
+		break;
+	default:
+		return 0;
+	}
+
 	system("pause");
 }
 

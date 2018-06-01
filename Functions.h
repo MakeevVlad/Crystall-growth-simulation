@@ -6,7 +6,6 @@
 typedef std::vector<std::vector<std::vector<double>>> tdim_vec;
 
 
-
 class Field
 {
 
@@ -15,6 +14,9 @@ public:
 	std::vector<std::vector<std::vector<std::vector<double>>>> zone; //Zone[0] -- занята ли ячейка; zone[1] -- потенциал
 	 //Ограничения поля по размеру
 	size_t size[3];
+	//Коэффициенты в формуле потенциала Ленарда-Джонса
+	double a1 = 1;
+	double a2 = 1;
 
 	//Конструкторы
 	Field();
@@ -85,14 +87,3 @@ public:
 	void along(Field& field, size_t _x, size_t _y, size_t _z);
 	double along_check(Field& field, size_t _x, size_t _y, size_t _z);
 };
-
-//Movements
-
-//Direction choice
-/*
-namespace shift
-{
-	void movement(Molecule& mol, Field& field);
-	void direction(Molecule& mol, Field& field);
-}
-*/
