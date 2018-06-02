@@ -38,7 +38,7 @@ int main()
 	Molecule mol(field);
 
 	std::cout << "\n------------------------------------------------------------\n";
-	std::cout << "Default simulation configuration: \n\na1 = " << field.a1 << " a2 = " << field.a2 << std::endl;
+	std::cout << "Default simulation configuration: \n\nsigma = " << field.sigma << " e = " << field.e << std::endl;
 	std::cout << "ALONG_EN = " << mol.ALONG_EN << " ASCENT_EN = " << mol.ASCENT_EN
 		<< " FALLING_EN = " << mol.FALLING_EN << "\nMAX_ENERGY = "
 		<< mol.MAX_ENERGY << " CRIT_EN = " << mol.CRIT_EN << std::endl;
@@ -50,7 +50,7 @@ int main()
 	case 'y':
 		set_configuration(field, mol);
 		std::cout << "\n-------------------------------------------------------------\n";
-		std::cout << "New configuration: \n\na1 = " << field.a1 << " a2 = " << field.a2 << std::endl;
+		std::cout << "New configuration: \n\nsigma = " << field.sigma << " e = " << field.e << std::endl;
 		std::cout << "ALONG_EN = " << mol.ALONG_EN << " ASCENT_EN = " << mol.ASCENT_EN
 			<< " FALLING_EN = " << mol.FALLING_EN << "\nMAX_ENERGY = "
 			<< mol.MAX_ENERGY << " CRIT_EN = " << mol.CRIT_EN << std::endl;
@@ -86,18 +86,6 @@ int main()
 
 	smart_data_collect(field);
 	system("show.py");
-
-	std::cout << "______________________________\n" <<
-				 "Do you want to try again? y, n\n";
-	std::cin >> var;
-	switch (var)
-	{
-	case 'y':
-		break;
-	default:
-		return 0;
-	}
-
 	system("pause");
 }
 

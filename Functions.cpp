@@ -5,6 +5,7 @@
 #include <ctime>
 #include <random>
 #include <fstream>
+#include <string>
 #include <omp.h>
 
 #include "Functions.h"
@@ -13,6 +14,7 @@
 //Функция, сохраняющая данные в файл для дальнейшей отрисовки
 void collect_data(Field& field)
 {
+
 	std::ofstream file("crystal.txt", std::ios::out);
 
 	for (double x = 0; x < field.size[0]; ++x)
@@ -20,6 +22,7 @@ void collect_data(Field& field)
 			for (double z = 1; z < field.size[2]; ++z)
 				if (field[x][y][z][0] == 1)
 					file << x << " " << y << " " << z << " " << field[x][y][z][1] << std::endl;
+
 	file.close();
 }
 //В файл записывается только координата верхней молекулы
@@ -36,21 +39,22 @@ void smart_data_collect(Field& field)
 					file << x << " " << y << " " << 0 << " " << 0 << std::endl;
 					continue;
 				}
-				if (field[x][y][z][0] == 1 && (z == field.get_size_z()? 0 :  field[x][y][z + 1][0] == 0))
+				if (field[x][y][z][0] == 1 && (z == field.get_size_z() ? 0 : field[x][y][z + 1][0] == 0))
 					file << x << " " << y << " " << z << " " << field[x][y][z][1] << std::endl;
+
 			}
 }
 //Задаются параметры сборки
 void set_configuration(Field& field, Molecule& mol)
 {
 	std::cout << "\n-------------------------------------------------------------\n";
-	std::cout << "Enter cooficients for L-J formula (Default is a1 = 1, a2 = 1) \n";
-	std::cin >> field.a1 >> field.a2;
-			
-	std::cout << "Enter ALONG_EN, ASCENT_EN, FALLING_EN (defaults = {10, 150, 10}) \n";
+	std::cout << "Enter cooficients for L-J formula\n";
+	std::cin >> field.sigma >> field.e;
+
+	std::cout << "Enter ALONG_EN, ASCENT_EN, FALLING_EN\n";
 	std::cin >> mol.ALONG_EN >> mol.ASCENT_EN >> mol.FALLING_EN;
 
-	std::cout << "Enter MAX_ENERGY and CRIT_ENERGY (defaults = {400, 15})\n ";
+	std::cout << "Enter MAX_ENERGY and CRIT_ENERGY\n ";
 	std::cin >> mol.MAX_ENERGY >> mol.CRIT_EN;
 	std::cout << "\n-------------------------------------------------------------\n";
 
@@ -117,7 +121,7 @@ void direction(Molecule& mol, Field& field)
 				pot[i][1] = x;
 				pot[i][2] = y;
 				pot[i][3] = z;
-			
+
 			}
 		}
 	}
@@ -159,7 +163,7 @@ void direction(Molecule& mol, Field& field)
 				pot[i][1] = x;
 				pot[i][2] = y;
 				pot[i][3] = z;
-			
+
 			}
 		}
 	}
@@ -221,7 +225,7 @@ bool movement(Molecule& mol, Field& field)
 	std::cout << std::endl << mol.x << " " << mol.y << " " << mol.z << " ";
 
 	//"Падение" молекулы
-	if (mol.z == field.get_size_z()) 
+	if (mol.z == field.get_size_z())
 		while (field[mol.x][mol.y][mol.z - 1][0] == 0)
 		{
 			--mol.z;
@@ -300,7 +304,7 @@ bool movement(Molecule& mol, Field& field)
 
 
 				//Убираем молекулу из начальной координаты
-				field[mol.x][mol.y][mol.z][0] = 0; 
+				field[mol.x][mol.y][mol.z][0] = 0;
 
 				//Изменяем энергию молекулы
 				mol.along(field, _X, _Y, mol.z);
@@ -316,7 +320,7 @@ bool movement(Molecule& mol, Field& field)
 			else
 			{
 				//mol.falling();
-				
+
 				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
 
 				int  n = 0;
@@ -332,7 +336,7 @@ bool movement(Molecule& mol, Field& field)
 				mol.x = _X;
 				mol.y = _Y;
 				mol.z += n;
-				
+
 				field[mol.x][mol.y][mol.z][0] = 1;
 				return 0;
 			}
@@ -350,12 +354,12 @@ bool movement(Molecule& mol, Field& field)
 			//Вероятности p_reflect - отражения and p_ascent - поднятия на уровень
 			double p_reflect = 1 / (1 + mol.ALONG_EN / (n * mol.ASCENT_EN));
 			double p_ascent  = 1 - p_reflect;
-			
+
 			//Генерируем вероятность
 			std::srand(std::time(0));
 			double p = (rand() % 1000) / 1000;
 
-			
+
 			if( p <= p_ascent) //Подъём
 			{
 				//Проверка на возможность движения
@@ -364,22 +368,22 @@ bool movement(Molecule& mol, Field& field)
 					direction(mol, field);
 					return 1;
 				}
-				
+
 				field[mol.x][mol.y][mol.z][0] = 0; //Убираем молекулу из начальной координаты
 
 				mol.ascent(field, _X, _Y, mol.z + n, n);
 
 				//Следующие координаты
-				mol.x = _X; 
+				mol.x = _X;
 				mol.y = _Y;
 
 				field[mol.x][mol.y][mol.z + n][0] = 1;
 				return 0;
 
 			}
-			
+
 			else //Отражение
-			{	
+			{
 
 				//Проверка на возможность движения
 				if (mol.energy - mol.ALONG_EN <= mol.CRIT_EN)
@@ -390,8 +394,8 @@ bool movement(Molecule& mol, Field& field)
 
 				movement_reflection(mol, field);
 				movement(mol, field) == 1? 1 : 0;
-				
-			}	
+
+			}
 
 		}
 	}
@@ -491,7 +495,7 @@ void Field::lj_potencial()
 							if (zone[size_t(x1)][size_t(y1)][size_t(z1)][0] == 1 && (x != x1 || y != y1 || z != z1))
 							{
 								double r = sqrt((double(x) - double(x1))*(double(x) - double(x1)) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
-								zone[size_t(x)][size_t(y)][size_t(z)][1] += (a1 / pow(r, 12)) - (a2 / pow(r, 6));
+								zone[size_t(x)][size_t(y)][size_t(z)][1] += 4 * e * (pow(sigma / r, 12) - pow(sigma / r, 6));
 							}
 						}
 			}
@@ -503,16 +507,16 @@ void Field::lj_potencial(size_t _x, size_t _y, size_t _z, int n)
 
 	size_t x_start = _x != 0 ? _x - 1 : size[0] - 1,
 		y_start = _y != 0 ? _y - 1 : size[1] - 1;
-		
+
 	size_t x_end = ((_x + 1) % size[0]) + 1,
 		y_end = ((_y + 1) % size[1]) + 1;
 
 	size_t z_start, z_end;
 
 	if (n < 0) { z_end = _z + 1; z_start = _z + n; }
-	
+
 	else { z_end = _z + n; z_start = _z - 1; }
-		
+
 
 #pragma omp parallel for ordered schedule(dynamic)
 	for (int x = x_start; x < x_end; ++x)
@@ -527,7 +531,7 @@ void Field::lj_potencial(size_t _x, size_t _y, size_t _z, int n)
 							if (zone[size_t(x1)][size_t(y1)][size_t(z1)][0] == 1 && (x != x1 || y != y1 || z != z1))
 							{
 								double r = sqrt((double(x) - double(x1))*(double(x) - double(x1)) + (y - y1)*(y - y1) + (z - z1)*(z - z1));
-								zone[size_t(x)][size_t(y)][size_t(z)][1] += (a1 / pow(r, 12)) - (a2 / pow(r, 6));
+								zone[size_t(x)][size_t(y)][size_t(z)][1] += 4 * e * (pow(sigma / r, 12) - pow(sigma / r, 6));
 							}
 						}
 			}
@@ -606,7 +610,7 @@ void Molecule::mol_generator(Field& field)
 	std::uniform_real_distribution<> uniform(0, MAX_ENERGY);
 	energy = uniform(gen);
 
-	std::cout << std::endl << "****new molecule!**** /n energy =" << energy << std::endl;
+	std::cout << std::endl << "****new molecule!****  energy =" << energy << std::endl;
 }
 
 //выйгрыш энергии частицой при переходе на уровень вниз
@@ -637,7 +641,7 @@ void Molecule::ascent(Field& field, size_t _x, size_t _y, size_t _z, size_t n)
 	double del_phi = field[x][y][z][1] - field[_x][_y][_z][1];
 
 	energy -= (n * ASCENT_EN - del_phi*charge);
-	
+
 }
 double Molecule::ascent_check(Field& field, size_t _x, size_t _y, size_t _z, size_t n)
 {
