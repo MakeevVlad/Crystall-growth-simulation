@@ -11,6 +11,9 @@ gp = fg.add_subplot(111, projection='3d')
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
+gp.set_xlabel('X')
+gp.set_ylabel('Y')
+gp.set_zlabel('Z')
 
 
 x = []  #PHI
@@ -28,15 +31,17 @@ for line in f:
 	z.append(nums[2])
 	pot.append(np.abs(nums[3]))
 
-xa = [0, 40]
-ya = [0, 40]
-za = [40, 40]
+xa = [0]
+ya = [0]
+za = [max(x)]
 
 
 bottom = np.zeros_like(z)
 width = depth = 1
 gp.bar3d(x, y, bottom, width, depth, z)
-#gp.scatter(xa, ya, za)
+
+gp.scatter(xa, ya, za, color= 'steelblue')
+
 ax.plot_trisurf(x, y, z)
-#ax.scatter(xa, ya, za)
+ax.scatter(xa, ya, za, color = 'steelblue')
 plt.show()
